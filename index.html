@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Panel - Manage Quizzes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f9f9f9;
+      margin: 0;
+    }
+
+    h2, h3 {
+      color: #333;
+    }
+
+    input, textarea, button, select {
+      display: block;
+      width: 100%;
+      margin: 8px 0;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    .quiz-box, .question-block {
+      background: #fff;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .option-input {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 5px;
+    }
+
+    .option-input input {
+      flex: 1;
+    }
+
+    .remove-btn {
+      background-color: #e74c3c;
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 5px;
+      font-size: 14px;
+    }
+
+    .add-btn {
+      background-color: #3498db;
+      color: #fff;
+      border: none;
+      padding: 12px;
+      margin-top: 10px;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .delete-btn, .edit-btn {
+      background: #c0392b;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+      font-size: 14px;
+    }
+
+    .edit-btn {
+      background-color: #2ecc71;
+    }
+
+    @media (max-width: 600px) {
+      .option-input {
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .delete-btn, .edit-btn {
+        width: 48%;
+        margin-top: 8px;
+      }
+
+      .quiz-box button {
+        width: 100%;
+        margin-top: 5px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h2 id="form-title">Create New Quiz</h2>
+
+  <div class="quiz-box">
+    <input type="text" id="quiz-title" placeholder="Quiz Title" />
+    <textarea id="quiz-description" placeholder="Quiz Description"></textarea>
+
+    <div id="questions-container"></div>
+
+    <button class="add-btn" onclick="addQuestion()">+ Add Question</button>
+    <button class="add-btn" onclick="submitQuiz()">Save Quiz</button>
+  </div>
+
+  <h2>Existing Quizzes</h2>
+  <div id="quiz-list"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
+    import {
+      getFirestore, collection, addDoc, deleteDoc,
+      doc, getDoc, getDocs, updateDoc
+    } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDm788npk4qw9RcT7qevq2HPH5-DbSTq2k",
+      authDomain: "location-45133.firebaseapp.com",
+      projectId: "location-45133",
+      storageBucket: "location-45133.firebasestorage.app",
+      messagingSenderId: "938504563570",
+      appId: "1:938504563570:web:a4741a9f52b9795f304beb"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const questionsContainer = document.getElementById("questions-container");
+    const titleInput = document.getElementById("quiz-title");
+    const descInput = document.getElementById("quiz-description");
+    const formTitle = document.getElementById("form-title");
+
+    let editingQuizId = null;
+
+    window.addQuestion = function () {
+      const div = document.createElement("div");
+      div.className = "question-block";
+      div.innerHTML = `
+        <h4>Question</h4>
+        <input type="text" class="question-text" placeholder="Enter question">
+        <div class="option-input"><input type="text" placeholder="Option A" class="option"></div>
+        <div class="option-input"><input type="text" placeholder="Option B" class="option"></div>
+        <div class="option-input"><input type="text" placeholder="Option C" class="option"></div>
+        <div class="option-input"><input type="text" placeholder="Option D" class="option"></div>
+        <input type="text" class="answer" placeholder="Correct Answer (must match one option)">
+        <button class="remove-btn" onclick="this.parentElement.remove()">Remove Question</button>
+      `;
+      questionsContainer.appendChild(div);
+    };
+
+    window.submitQuiz = async function () {
+      const title = titleInput.value.trim();
+      const description = descInput.value.trim();
+      const questionBlocks = document.querySelectorAll(".question-block");
+
+      if (!title || !description || questionBlocks.length === 0) {
+        alert("Please fill in all fields and add at least one question.");
+        return;
+      }
+
+      const questions = [];
+      questionBlocks.forEach(block => {
+        const q = block.querySelector(".question-text").value.trim();
+        const opts = Array.from(block.querySelectorAll(".option")).map(o => o.value.trim());
+        const ans = block.querySelector(".answer").value.trim();
+
+        if (!q || opts.some(o => !o) || !ans || !opts.includes(ans)) {
+          alert("Each question must be complete. Answer must match one of the options.");
+          throw new Error("Invalid question data");
+        }
+
+        questions.push({ question: q, options: opts, answer: ans });
+      });
+
+      try {
+        if (editingQuizId) {
+          await updateDoc(doc(db, "quizzes", editingQuizId), { title, description, questions });
+          alert("Quiz updated successfully!");
+        } else {
+          await addDoc(collection(db, "quizzes"), { title, description, questions });
+          alert("Quiz added successfully!");
+        }
+        location.reload();
+      } catch (e) {
+        alert("Error saving quiz: " + e.message);
+      }
+    };
+
+    async function loadQuizzes() {
+      const quizList = document.getElementById("quiz-list");
+      quizList.innerHTML = "";
+      const querySnapshot = await getDocs(collection(db, "quizzes"));
+      querySnapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        const quizDiv = document.createElement("div");
+        quizDiv.className = "quiz-box";
+        quizDiv.innerHTML = `
+          <h3>${data.title}</h3>
+          <p>${data.description}</p>
+          <p><strong>${data.questions.length}</strong> question(s)</p>
+          <button class="edit-btn" onclick="editQuiz('${docSnap.id}')">Edit</button>
+          <button class="delete-btn" onclick="deleteQuiz('${docSnap.id}')">Delete</button>
+        `;
+        quizList.appendChild(quizDiv);
+      });
+    }
+
+    window.deleteQuiz = async function (id) {
+      if (confirm("Are you sure you want to delete this quiz?")) {
+        await deleteDoc(doc(db, "quizzes", id));
+        alert("Quiz deleted.");
+        loadQuizzes();
+      }
+    };
+
+    window.editQuiz = async function (id) {
+      editingQuizId = id;
+      formTitle.textContent = "Edit Quiz";
+
+      const quizDoc = await getDoc(doc(db, "quizzes", id));
+      const data = quizDoc.data();
+
+      titleInput.value = data.title;
+      descInput.value = data.description;
+      questionsContainer.innerHTML = "";
+
+      data.questions.forEach(q => {
+        const div = document.createElement("div");
+        div.className = "question-block";
+        div.innerHTML = `
+          <h4>Question</h4>
+          <input type="text" class="question-text" value="${q.question}">
+          ${q.options.map(opt => `
+            <div class="option-input"><input type="text" class="option" value="${opt}"></div>
+          `).join("")}
+          <input type="text" class="answer" value="${q.answer}">
+          <button class="remove-btn" onclick="this.parentElement.remove()">Remove Question</button>
+        `;
+        questionsContainer.appendChild(div);
+      });
+    };
+
+    loadQuizzes();
+  </script>
+</body>
+</html>
