@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE html><html>
 <head>
   <title>Admin Panel - Manage Quizzes</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,114 +8,119 @@
       padding: 20px;
       background: #f9f9f9;
       margin: 0;
-    }
+    }h2, h3 {
+  color: #333;
+}
 
-    h2, h3 {
-      color: #333;
-    }
+input, textarea, button, select {
+  display: block;
+  width: 100%;
+  margin: 8px 0;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
 
-    input, textarea, button, select {
-      display: block;
-      width: 100%;
-      margin: 8px 0;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
-    }
+.quiz-box, .question-block {
+  background: #fff;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
 
-    .quiz-box, .question-block {
-      background: #fff;
-      padding: 15px;
-      margin-bottom: 20px;
-      border-radius: 6px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+.option-input {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 5px;
+}
 
-    .option-input {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 5px;
-    }
+.option-input input {
+  flex: 1;
+}
 
-    .option-input input {
-      flex: 1;
-    }
+.remove-btn {
+  background-color: #e74c3c;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 5px;
+  font-size: 14px;
+}
 
-    .remove-btn {
-      background-color: #e74c3c;
-      color: #fff;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-top: 5px;
-      font-size: 14px;
-    }
+.add-btn {
+  background-color: #3498db;
+  color: #fff;
+  border: none;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+}
 
-    .add-btn {
-      background-color: #3498db;
-      color: #fff;
-      border: none;
-      padding: 12px;
-      margin-top: 10px;
-      border-radius: 4px;
-      font-size: 16px;
-      cursor: pointer;
-    }
+.delete-btn, .edit-btn {
+  background: #c0392b;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 10px;
+  font-size: 14px;
+}
 
-    .delete-btn, .edit-btn {
-      background: #c0392b;
-      color: white;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-right: 10px;
-      font-size: 14px;
-    }
+.edit-btn {
+  background-color: #2ecc71;
+}
 
-    .edit-btn {
-      background-color: #2ecc71;
-    }
+.accordion-header {
+  cursor: pointer;
+  padding: 10px;
+  background: #eee;
+  border-radius: 4px;
+  font-weight: bold;
+}
 
-    @media (max-width: 600px) {
-      .option-input {
-        flex-direction: column;
-        gap: 5px;
-      }
+.question-content {
+  display: none;
+  margin-top: 10px;
+}
 
-      .delete-btn, .edit-btn {
-        width: 48%;
-        margin-top: 8px;
-      }
+@media (max-width: 600px) {
+  .option-input {
+    flex-direction: column;
+    gap: 5px;
+  }
 
-      .quiz-box button {
-        width: 100%;
-        margin-top: 5px;
-      }
-    }
+  .delete-btn, .edit-btn {
+    width: 48%;
+    margin-top: 8px;
+  }
+
+  .quiz-box button {
+    width: 100%;
+    margin-top: 5px;
+  }
+}
+
   </style>
 </head>
 <body>
-
   <h2 id="form-title">Create New Quiz</h2>
-
   <div class="quiz-box">
     <input type="text" id="quiz-title" placeholder="Quiz Title" />
     <textarea id="quiz-description" placeholder="Quiz Description"></textarea>
-
     <div id="questions-container"></div>
-
     <button class="add-btn" onclick="addQuestion()">+ Add Question</button>
     <button class="add-btn" onclick="submitQuiz()">Save Quiz</button>
   </div>
-
   <h2>Existing Quizzes</h2>
-  <div id="quiz-list"></div>
-
-  <script type="module">
+  <div id="quiz-list"></div>  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
     import {
       getFirestore, collection, addDoc, deleteDoc,
@@ -140,20 +144,36 @@
     const formTitle = document.getElementById("form-title");
 
     let editingQuizId = null;
+    let questionCount = 0;
 
     window.addQuestion = function () {
+      questionCount++;
       const div = document.createElement("div");
       div.className = "question-block";
-      div.innerHTML = `
-        <h4>Question</h4>
+
+      const header = document.createElement("div");
+      header.className = "accordion-header";
+      header.textContent = `Question ${questionCount}`;
+
+      const content = document.createElement("div");
+      content.className = "question-content";
+      content.innerHTML = `
         <input type="text" class="question-text" placeholder="Enter question">
         <div class="option-input"><input type="text" placeholder="Option A" class="option"></div>
         <div class="option-input"><input type="text" placeholder="Option B" class="option"></div>
         <div class="option-input"><input type="text" placeholder="Option C" class="option"></div>
         <div class="option-input"><input type="text" placeholder="Option D" class="option"></div>
         <input type="text" class="answer" placeholder="Correct Answer (must match one option)">
-        <button class="remove-btn" onclick="this.parentElement.remove()">Remove Question</button>
+        <button class="remove-btn" onclick="this.closest('.question-block').remove()">Remove Question</button>
       `;
+
+      header.addEventListener("click", () => {
+        header.classList.toggle("active");
+        content.style.display = content.style.display === "block" ? "none" : "block";
+      });
+
+      div.appendChild(header);
+      div.appendChild(content);
       questionsContainer.appendChild(div);
     };
 
@@ -225,31 +245,42 @@
     window.editQuiz = async function (id) {
       editingQuizId = id;
       formTitle.textContent = "Edit Quiz";
-
       const quizDoc = await getDoc(doc(db, "quizzes", id));
       const data = quizDoc.data();
-
       titleInput.value = data.title;
       descInput.value = data.description;
       questionsContainer.innerHTML = "";
+      questionCount = 0;
 
       data.questions.forEach(q => {
+        questionCount++;
         const div = document.createElement("div");
         div.className = "question-block";
-        div.innerHTML = `
-          <h4>Question</h4>
+
+        const header = document.createElement("div");
+        header.className = "accordion-header";
+        header.textContent = `Question ${questionCount}`;
+
+        const content = document.createElement("div");
+        content.className = "question-content";
+        content.innerHTML = `
           <input type="text" class="question-text" value="${q.question}">
-          ${q.options.map(opt => `
-            <div class="option-input"><input type="text" class="option" value="${opt}"></div>
-          `).join("")}
+          ${q.options.map(opt => `<div class="option-input"><input type="text" class="option" value="${opt}"></div>`).join("")}
           <input type="text" class="answer" value="${q.answer}">
-          <button class="remove-btn" onclick="this.parentElement.remove()">Remove Question</button>
+          <button class="remove-btn" onclick="this.closest('.question-block').remove()">Remove Question</button>
         `;
+
+        header.addEventListener("click", () => {
+          header.classList.toggle("active");
+          content.style.display = content.style.display === "block" ? "none" : "block";
+        });
+
+        div.appendChild(header);
+        div.appendChild(content);
         questionsContainer.appendChild(div);
       });
     };
 
     loadQuizzes();
-  </script>
-</body>
+  </script></body>
 </html>
