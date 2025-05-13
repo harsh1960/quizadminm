@@ -1,4 +1,5 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html>
+<html>
 <head>
   <title>Admin Panel - Manage Quizzes</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,106 +9,128 @@
       padding: 20px;
       background: #f9f9f9;
       margin: 0;
-    }h2, h3 {
-  color: #333;
-}
+    }
+    h2, h3 {
+      color: #333;
+    }
+    input, textarea, button, select {
+      display: block;
+      width: 100%;
+      margin: 8px 0;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    .quiz-box, .question-block {
+      background: #fff;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .option-input {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 5px;
+    }
+    .option-input input {
+      flex: 1;
+    }
+    .remove-btn {
+      background-color: #e74c3c;
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 5px;
+      font-size: 14px;
+    }
+    .add-btn {
+      background-color: #3498db;
+      color: #fff;
+      border: none;
+      padding: 12px;
+      margin-top: 10px;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .delete-btn, .edit-btn {
+      background: #c0392b;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+      font-size: 14px;
+    }
+    .edit-btn {
+      background-color: #2ecc71;
+    }
+    .accordion-header {
+      cursor: pointer;
+      padding: 10px;
+      background: #eee;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .question-content {
+      display: none;
+      margin-top: 10px;
+    }
+    @media (max-width: 600px) {
+      .option-input {
+        flex-direction: column;
+        gap: 5px;
+      }
+      .delete-btn, .edit-btn {
+        width: 48%;
+        margin-top: 8px;
+      }
+      .quiz-box button {
+        width: 100%;
+        margin-top: 5px;
+      }
+    }
 
-input, textarea, button, select {
-  display: block;
-  width: 100%;
-  margin: 8px 0;
-  padding: 10px;
-  font-size: 16px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
-}
-
-.quiz-box, .question-block {
-  background: #fff;
-  padding: 15px;
-  margin-bottom: 20px;
-  border-radius: 6px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.option-input {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 5px;
-}
-
-.option-input input {
-  flex: 1;
-}
-
-.remove-btn {
-  background-color: #e74c3c;
-  color: #fff;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-top: 5px;
-  font-size: 14px;
-}
-
-.add-btn {
-  background-color: #3498db;
-  color: #fff;
-  border: none;
-  padding: 12px;
-  margin-top: 10px;
-  border-radius: 4px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-.delete-btn, .edit-btn {
-  background: #c0392b;
-  color: white;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-right: 10px;
-  font-size: 14px;
-}
-
-.edit-btn {
-  background-color: #2ecc71;
-}
-
-.accordion-header {
-  cursor: pointer;
-  padding: 10px;
-  background: #eee;
-  border-radius: 4px;
-  font-weight: bold;
-}
-
-.question-content {
-  display: none;
-  margin-top: 10px;
-}
-
-@media (max-width: 600px) {
-  .option-input {
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  .delete-btn, .edit-btn {
-    width: 48%;
-    margin-top: 8px;
-  }
-
-  .quiz-box button {
-    width: 100%;
-    margin-top: 5px;
-  }
-}
-
+    /* Custom Popup Styles */
+    .popup-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    .popup-box {
+      background: #fff;
+      padding: 30px 35px;
+      border-radius: 10px;
+      text-align: center;
+      max-width: 400px;
+      animation: fadeInScale 0.3s ease-in-out;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .popup-box button {
+      background: #3498db;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 20px;
+      margin-top: 10px;
+    }
+    @keyframes fadeInScale {
+      0% { transform: scale(0.7); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
   </style>
 </head>
 <body>
@@ -120,7 +143,17 @@ input, textarea, button, select {
     <button class="add-btn" onclick="submitQuiz()">Save Quiz</button>
   </div>
   <h2>Existing Quizzes</h2>
-  <div id="quiz-list"></div>  <script type="module">
+  <div id="quiz-list"></div>
+
+  <!-- Custom Popup -->
+  <div id="custom-popup" class="popup-overlay">
+    <div class="popup-box">
+      <p id="popup-message">Popup Message</p>
+      <button onclick="closePopup()">OK</button>
+    </div>
+  </div>
+
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
     import {
       getFirestore, collection, addDoc, deleteDoc,
@@ -131,7 +164,7 @@ input, textarea, button, select {
       apiKey: "AIzaSyDm788npk4qw9RcT7qevq2HPH5-DbSTq2k",
       authDomain: "location-45133.firebaseapp.com",
       projectId: "location-45133",
-      storageBucket: "location-45133.firebasestorage.app",
+      storageBucket: "location-45133.appspot.com",
       messagingSenderId: "938504563570",
       appId: "1:938504563570:web:a4741a9f52b9795f304beb"
     };
@@ -183,7 +216,7 @@ input, textarea, button, select {
       const questionBlocks = document.querySelectorAll(".question-block");
 
       if (!title || !description || questionBlocks.length === 0) {
-        alert("Please fill in all fields and add at least one question.");
+        showPopup("Please fill in all fields and add at least one question.");
         return;
       }
 
@@ -194,7 +227,7 @@ input, textarea, button, select {
         const ans = block.querySelector(".answer").value.trim();
 
         if (!q || opts.some(o => !o) || !ans || !opts.includes(ans)) {
-          alert("Each question must be complete. Answer must match one of the options.");
+          showPopup("Each question must be complete. Answer must match one of the options.");
           throw new Error("Invalid question data");
         }
 
@@ -204,14 +237,14 @@ input, textarea, button, select {
       try {
         if (editingQuizId) {
           await updateDoc(doc(db, "quizzes", editingQuizId), { title, description, questions });
-          alert("Quiz updated successfully!");
+          showPopup("Quiz updated successfully!");
         } else {
           await addDoc(collection(db, "quizzes"), { title, description, questions });
-          alert("Quiz added successfully!");
+          showPopup("Quiz added successfully!");
         }
-        location.reload();
+        setTimeout(() => location.reload(), 1500);
       } catch (e) {
-        alert("Error saving quiz: " + e.message);
+        showPopup("Error saving quiz: " + e.message);
       }
     };
 
@@ -237,7 +270,7 @@ input, textarea, button, select {
     window.deleteQuiz = async function (id) {
       if (confirm("Are you sure you want to delete this quiz?")) {
         await deleteDoc(doc(db, "quizzes", id));
-        alert("Quiz deleted.");
+        showPopup("Quiz deleted.");
         loadQuizzes();
       }
     };
@@ -282,5 +315,16 @@ input, textarea, button, select {
     };
 
     loadQuizzes();
-  </script></body>
+
+    // Popup Functions
+    window.showPopup = function(message) {
+      document.getElementById("popup-message").innerText = message;
+      document.getElementById("custom-popup").style.display = "flex";
+    };
+
+    window.closePopup = function() {
+      document.getElementById("custom-popup").style.display = "none";
+    };
+  </script>
+</body>
 </html>
