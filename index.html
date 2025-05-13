@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE html><html>
 <head>
   <title>Admin Panel - Manage Quizzes</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -96,8 +95,6 @@
         margin-top: 5px;
       }
     }
-
-    /* Custom Popup Styles */
     .popup-overlay {
       display: none;
       position: fixed;
@@ -110,10 +107,10 @@
     }
     .popup-box {
       background: #fff;
-      padding: 30px 35px;
-      border-radius: 10px;
+      padding: 40px;
+      border-radius: 12px;
       text-align: center;
-      max-width: 400px;
+      max-width: 500px;
       animation: fadeInScale 0.3s ease-in-out;
       box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
@@ -121,10 +118,10 @@
       background: #3498db;
       color: #fff;
       border: none;
-      padding: 10px 20px;
+      padding: 12px 24px;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 20px;
+      font-size: 18px;
       margin-top: 10px;
     }
     @keyframes fadeInScale {
@@ -143,17 +140,12 @@
     <button class="add-btn" onclick="submitQuiz()">Save Quiz</button>
   </div>
   <h2>Existing Quizzes</h2>
-  <div id="quiz-list"></div>
-
-  <!-- Custom Popup -->
-  <div id="custom-popup" class="popup-overlay">
+  <div id="quiz-list"></div>  <div id="custom-popup" class="popup-overlay">
     <div class="popup-box">
       <p id="popup-message">Popup Message</p>
       <button onclick="closePopup()">OK</button>
     </div>
-  </div>
-
-  <script type="module">
+  </div>  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
     import {
       getFirestore, collection, addDoc, deleteDoc,
@@ -171,6 +163,7 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+
     const questionsContainer = document.getElementById("questions-container");
     const titleInput = document.getElementById("quiz-title");
     const descInput = document.getElementById("quiz-description");
@@ -183,11 +176,9 @@
       questionCount++;
       const div = document.createElement("div");
       div.className = "question-block";
-
       const header = document.createElement("div");
       header.className = "accordion-header";
       header.textContent = `Question ${questionCount}`;
-
       const content = document.createElement("div");
       content.className = "question-content";
       content.innerHTML = `
@@ -199,41 +190,43 @@
         <input type="text" class="answer" placeholder="Correct Answer (must match one option)">
         <button class="remove-btn" onclick="this.closest('.question-block').remove()">Remove Question</button>
       `;
-
       header.addEventListener("click", () => {
         header.classList.toggle("active");
         content.style.display = content.style.display === "block" ? "none" : "block";
       });
-
       div.appendChild(header);
       div.appendChild(content);
       questionsContainer.appendChild(div);
     };
 
+    function clearForm() {
+      titleInput.value = "";
+      descInput.value = "";
+      questionsContainer.innerHTML = "";
+      editingQuizId = null;
+      formTitle.textContent = "Create New Quiz";
+      questionCount = 0;
+    }
+
     window.submitQuiz = async function () {
       const title = titleInput.value.trim();
       const description = descInput.value.trim();
       const questionBlocks = document.querySelectorAll(".question-block");
-
       if (!title || !description || questionBlocks.length === 0) {
         showPopup("Please fill in all fields and add at least one question.");
         return;
       }
-
       const questions = [];
       questionBlocks.forEach(block => {
         const q = block.querySelector(".question-text").value.trim();
         const opts = Array.from(block.querySelectorAll(".option")).map(o => o.value.trim());
         const ans = block.querySelector(".answer").value.trim();
-
         if (!q || opts.some(o => !o) || !ans || !opts.includes(ans)) {
           showPopup("Each question must be complete. Answer must match one of the options.");
           throw new Error("Invalid question data");
         }
-
         questions.push({ question: q, options: opts, answer: ans });
       });
-
       try {
         if (editingQuizId) {
           await updateDoc(doc(db, "quizzes", editingQuizId), { title, description, questions });
@@ -242,7 +235,8 @@
           await addDoc(collection(db, "quizzes"), { title, description, questions });
           showPopup("Quiz added successfully!");
         }
-        setTimeout(() => location.reload(), 1500);
+        clearForm();
+        loadQuizzes();
       } catch (e) {
         showPopup("Error saving quiz: " + e.message);
       }
@@ -284,16 +278,13 @@
       descInput.value = data.description;
       questionsContainer.innerHTML = "";
       questionCount = 0;
-
       data.questions.forEach(q => {
         questionCount++;
         const div = document.createElement("div");
         div.className = "question-block";
-
         const header = document.createElement("div");
         header.className = "accordion-header";
         header.textContent = `Question ${questionCount}`;
-
         const content = document.createElement("div");
         content.className = "question-content";
         content.innerHTML = `
@@ -302,21 +293,16 @@
           <input type="text" class="answer" value="${q.answer}">
           <button class="remove-btn" onclick="this.closest('.question-block').remove()">Remove Question</button>
         `;
-
         header.addEventListener("click", () => {
           header.classList.toggle("active");
           content.style.display = content.style.display === "block" ? "none" : "block";
         });
-
         div.appendChild(header);
         div.appendChild(content);
         questionsContainer.appendChild(div);
       });
     };
 
-    loadQuizzes();
-
-    // Popup Functions
     window.showPopup = function(message) {
       document.getElementById("popup-message").innerText = message;
       document.getElementById("custom-popup").style.display = "flex";
@@ -325,6 +311,7 @@
     window.closePopup = function() {
       document.getElementById("custom-popup").style.display = "none";
     };
-  </script>
-</body>
+
+    loadQuizzes();
+  </script></body>
 </html>
