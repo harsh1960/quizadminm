@@ -1,159 +1,407 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <title>Admin Panel - Manage Quizzes</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quiz Portal</title>
   <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; /* Base font size */ }
     body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background: #f9f9f9;
-      margin: 0;
-    }
-    h2, h3 {
+      font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+      background: #f0f4f8;
+      padding: 0; /* Body padding removed, header will manage top space if needed */
       color: #333;
+      line-height: 1.6;
     }
-    input, textarea, button, select {
-      display: block;
-      width: 100%;
-      margin: 8px 0;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
-    }
-    .quiz-box, .question-block {
-      background: #fff;
-      padding: 15px;
+    /* Main site heading moved into .app-header */
+    h2 { /* Keeping general h2 styling */
+      text-align: center;
       margin-bottom: 20px;
-      border-radius: 6px;
+      color: #2c3e50;
+      font-size: 1.5rem;
+    }
+
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      background-color: #ffffff;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      position: sticky; /* Make header sticky */
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+    }
+
+    .app-header h1 {
+      font-size: 1.7rem;
+      color: #2c3e50;
+      margin: 0;
+      flex-grow: 1;
+      text-align: center;
+      font-weight: 600; /* Slightly bolder */
+    }
+
+    .header-icon {
+      width: 44px; /* Increased size slightly */
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.4rem; /* Adjusted for new size */
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
+      flex-shrink: 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15); /* Subtle shadow for icons */
+    }
+    .header-icon:hover {
+      transform: scale(1.08); /* Slightly more pop on hover */
+    }
+
+    #leaderboard-icon-container {
+      background-color: #e67e22; /* Orange/Amber */
+    }
+    #leaderboard-icon-container:hover {
+      background-color: #d35400;
+    }
+
+    #profile-icon-container {
+      background-color: #5dade2; /* Light blue */
+    }
+     #profile-icon-container:hover {
+      background-color: #3498db;
+    }
+
+    .content-wrapper { /* Added wrapper for content below sticky header */
+        padding: 15px;
+    }
+
+    .quiz-list, .quiz-box, .login-box, .leaderboard-box, .profile-dashboard {
+      max-width: 600px;
+      margin: 20px auto;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .quiz-item {
+      background: #3498db;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 10px;
+      margin: 12px 0;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+      text-align: left;
+    }
+    .quiz-item strong { display: block; margin-bottom: 5px; }
+    .quiz-item small { font-size: 0.85rem; opacity: 0.9; }
+    .quiz-item:hover { background: #2980b9; transform: translateY(-2px); }
+
+    .quiz-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .nav-btn, .action-btn {
+      background: #3498db;
+      border: none;
+      color: white;
+      font-size: 1rem;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    .option-input {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 5px;
+    .nav-btn {
+        font-size: 1.25rem;
+        padding: 8px 15px;
+        border-radius: 50%;
     }
-    .option-input input {
-      flex: 1;
-    }
-    .remove-btn {
-      background-color: #e74c3c;
-      color: #fff;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 4px;
+    .nav-btn:disabled, .action-btn:disabled { background: #bdc3c7; cursor: default; box-shadow: none; }
+    .nav-btn:hover:enabled, .action-btn:hover:enabled { background: #2980b9; box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+
+    .question-box h3 { margin-bottom: 18px; font-size: 1.2rem; color: #34495e; }
+
+    .option-btn {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      padding: 14px;
+      font-size: 1rem;
+      background: #ecf0f1;
+      border: 1px solid #dde1e2;
+      border-radius: 8px;
       cursor: pointer;
-      margin-top: 5px;
-      font-size: 14px;
+      text-align: left;
+      transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
     }
-    .add-btn {
+    .option-btn:hover:not(:disabled) { background: #d5dfe7; border-color: #c0c9d0; }
+    .option-btn:disabled { opacity: 0.7; cursor: default; }
+    .option-btn.correct { background-color: #2ecc71 !important; color: white !important; border-color: #27ae60 !important; }
+    .option-btn.incorrect { background-color: #e74c3c !important; color: white !important; border-color: #c0392b !important; }
+
+
+    #score-box { text-align: center; font-size: 1.2rem; margin-top: 25px; }
+    #score-box p { margin-bottom: 8px; }
+    #score-box strong { color: #27ae60; }
+
+
+    .back-btn, .submit-btn, .leaderboard-nav-btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      width: auto;
+      margin-top: 10px;
+      font-size: 1rem;
+      transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .back-btn { background: #95a5a6; color: white; }
+    .back-btn:hover { background: #7f8c8d; box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+
+    .submit-btn { background: #27ae60; color: white; }
+    .submit-btn:hover { background: #229954; box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+
+    .leaderboard-nav-btn { background: #e67e22; color: white; } /* Style might be redundant now */
+    .leaderboard-nav-btn:hover { background: #d35400; box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+
+
+    #progress-container {
+      width: 100%;
+      background: #e0e0e0;
+      height: 14px;
+      border-radius: 7px;
+      margin-bottom: 25px;
+      overflow: hidden;
+    }
+    #progress-bar { height: 100%; width: 0%; background: #3498db; transition: width 0.4s ease; }
+
+    .login-box input, #register-form input {
+      width: 100%;
+      padding: 14px;
+      margin: 10px 0;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    .login-box input:focus, #register-form input:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        outline: none;
+    }
+
+    .login-box .action-btn, #register-form .action-btn {
+      width: 100%;
+      padding: 14px;
+      margin-top: 15px;
+    }
+
+    #auth-toggle, #register-form p {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 0.9rem;
+    }
+    #auth-toggle a, #register-form a {
+        color: #3498db;
+        text-decoration: none;
+        font-weight: bold;
+    }
+    #auth-toggle a:hover, #register-form a:hover { text-decoration: underline; }
+
+    .leaderboard-box table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    .leaderboard-box th, .leaderboard-box td {
+      border: 1px solid #e0e0e0;
+      padding: 12px 15px;
+      text-align: left;
+      font-size: 0.95rem;
+    }
+    .leaderboard-box th {
       background-color: #3498db;
-      color: #fff;
-      border: none;
-      padding: 12px;
-      margin-top: 10px;
-      border-radius: 4px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    .delete-btn, .edit-btn {
-      background: #c0392b;
       color: white;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-right: 10px;
-      font-size: 14px;
+      font-size: 1rem;
     }
-    .edit-btn {
-      background-color: #2ecc71;
+    .leaderboard-box tr:nth-child(even) { background-color: #f8f9fa; }
+    .leaderboard-box tr:hover { background-color: #e9ecef; }
+    .leaderboard-box td:first-child { font-weight: bold; text-align: center; }
+
+    .profile-info p {
+        font-size: 1.05rem;
+        margin-bottom: 12px;
+        color: #333;
     }
-    .accordion-header {
-      cursor: pointer;
-      padding: 10px;
-      background: #eee;
-      border-radius: 4px;
-      font-weight: bold;
+    .profile-info strong {
+        color: #2c3e50;
+        margin-right: 8px;
     }
-    .question-content {
-      display: none;
-      margin-top: 10px;
+    .profile-info span {
+        color: #3498db;
     }
-    @media (max-width: 600px) {
-      .option-input {
+
+
+    .button-container {
+        display: flex;
         flex-direction: column;
-        gap: 5px;
-      }
-      .delete-btn, .edit-btn {
-        width: 48%;
-        margin-top: 8px;
-      }
-      .quiz-box button {
+        gap: 10px;
+        margin-top: 20px;
+    }
+    .button-container button {
         width: 100%;
-        margin-top: 5px;
-      }
     }
-    .popup-overlay {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.6);
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
+
+    @media (min-width: 450px) {
+        .button-container {
+            flex-direction: row;
+            justify-content: center;
+        }
+        .button-container button {
+            width: auto;
+        }
     }
-    .popup-box {
-      background: #fff;
-      padding: 40px;
-      border-radius: 12px;
-      text-align: center;
-      max-width: 500px;
-      animation: fadeInScale 0.3s ease-in-out;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+
+    @media (max-width: 640px) {
+      h2 { font-size: 1.3rem; }
+      .app-header h1 { font-size: 1.4rem; } /* Responsive header title */
+      .header-icon { width: 40px; height: 40px; font-size: 1.2rem; }
+      .app-header { padding: 10px 15px; }
+
+
+      .content-wrapper { padding: 10px; }
+      .quiz-list, .quiz-box, .login-box, .leaderboard-box, .profile-dashboard { padding: 15px; margin: 15px auto; }
+      .quiz-item { font-size: 1rem; padding: 12px 15px; }
+      .option-btn { padding: 12px; font-size: 0.95rem;}
+      .back-btn, .submit-btn { padding: 10px 15px; font-size: 0.95rem; }
+      .nav-btn { font-size: 1.1rem; padding: 7px 13px; }
+      .leaderboard-box th, .leaderboard-box td { padding: 10px; font-size: 0.9rem;}
+      .login-box input, #register-form input { padding: 12px; font-size: 0.95rem;}
+      .login-box .action-btn, #register-form .action-btn { padding: 12px; }
+      .profile-info p { font-size: 1rem; }
     }
-    .popup-box button {
-      background: #3498db;
-      color: #fff;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 18px;
-      margin-top: 10px;
-    }
-    @keyframes fadeInScale {
-      0% { transform: scale(0.7); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
+
+    @media (max-width: 380px) { /* Very small screens */
+        .app-header h1 { font-size: 1.2rem; }
+        .header-icon { width: 36px; height: 36px; font-size: 1.1rem; }
+        .app-header { padding: 8px 10px; }
+
+        .content-wrapper { padding: 10px; }
+        .quiz-list, .quiz-box, .login-box, .leaderboard-box, .profile-dashboard { padding: 10px; }
+        .quiz-item { font-size: 0.95rem; margin: 10px 0; }
+        .quiz-header { margin-bottom: 10px; }
+        .question-box h3 { font-size: 1.1rem; margin-bottom: 12px; }
+        #progress-container { margin-bottom: 20px; }
+        .nav-btn { font-size: 1rem; padding: 6px 10px; }
+        .profile-info p { font-size: 0.95rem; }
     }
   </style>
 </head>
 <body>
-  <h2 id="form-title">Create New Quiz</h2>
-  <div class="quiz-box">
-    <input type="text" id="quiz-title" placeholder="Quiz Title" />
-    <textarea id="quiz-description" placeholder="Quiz Description"></textarea>
-    <div id="questions-container"></div>
-    <button class="add-btn" onclick="addQuestion()">+ Add Question</button>
-    <button class="add-btn" onclick="submitQuiz()">Save Quiz</button>
-  </div>
-  <h2>Existing Quizzes</h2>
-  <div id="quiz-list"></div>  <div id="custom-popup" class="popup-overlay">
-    <div class="popup-box">
-      <p id="popup-message">Popup Message</p>
-      <button onclick="closePopup()">OK</button>
+  <header class="app-header" id="app-header" style="display: none;">
+    <div class="header-icon" id="leaderboard-icon-container" title="View Leaderboard">
+        <span id="leaderboard-initial">L</span>
     </div>
-  </div>  <script type="module">
+    <h1 id="main-app-title">The Quiz Hub</h1>
+    <div class="header-icon" id="profile-icon-container" title="My Profile">
+        <span id="profile-initial">U</span> </div>
+  </header>
+
+  <div class="content-wrapper"> <div class="login-box" id="login-box">
+        <h2>Login</h2>
+        <input type="email" id="email" placeholder="Email Address" autocomplete="email" />
+        <input type="password" id="password" placeholder="Password" autocomplete="current-password" />
+        <button onclick="login()" class="action-btn">Login</button>
+        <div id="auth-toggle">
+          <p id="toggle-text">New user? <a href="#" onclick="showRegisterForm()">Register here</a></p>
+        </div>
+        <div id="register-form" style="display: none;">
+          <h2>Register</h2>
+          <input type="text" id="reg-name" placeholder="Full Name" autocomplete="name" />
+          <input type="email" id="reg-email" placeholder="Email Address" autocomplete="email" />
+          <input type="password" id="reg-password" placeholder="Create Password" autocomplete="new-password" />
+          <button onclick="register()" class="action-btn">Register</button>
+          <p>Already have an account? <a href="#" onclick="showLoginForm()">Login here</a></p>
+        </div>
+      </div>
+
+      <div class="quiz-list" id="quiz-list" style="display: none;">
+        <h2>Select a Quiz</h2>
+        <div id="quiz-items-container">
+            </div>
+        </div>
+
+      <div class="quiz-box" id="quiz-box" style="display: none;">
+        <div class="quiz-header">
+          <button class="nav-btn" id="prevBtn" aria-label="Previous Question">&lt;</button>
+          <h2 id="quiz-title"></h2> <button class="nav-btn" id="nextBtn" aria-label="Next Question">&gt;</button>
+        </div>
+        <p id="quiz-description"></p>
+        <div id="progress-container"><div id="progress-bar"></div></div>
+        <div class="question-box" id="question-box"></div>
+        <div id="score-box"></div>
+        <div class="button-container" id="quiz-action-buttons">
+            <button class="submit-btn" id="submitBtn" style="display: none;">Submit Quiz</button>
+            <button class="back-btn" id="backToQuizzesBtn" onclick="goBackToQuizList()">Back to Quizzes</button>
+        </div>
+      </div>
+
+      <div class="leaderboard-box" id="leaderboard-box" style="display: none;">
+        <h2>Leaderboard</h2>
+        <table id="leaderboard-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Name</th>
+              <th>Total Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            </tbody>
+        </table>
+        <div class="button-container">
+            <button class="back-btn" onclick="goBackToQuizListFromLeaderboard()">Back to Quizzes</button>
+        </div>
+      </div>
+
+      <div class="profile-dashboard" id="profile-dashboard" style="display: none;">
+        <h2>My Profile</h2>
+        <div class="profile-info">
+          <p><strong>Name:</strong> <span id="profile-name">Loading...</span></p>
+          <p><strong>Email:</strong> <span id="profile-email">Loading...</span></p>
+          <p><strong>Total Quizzes Taken:</strong> <span id="profile-quizzes-taken">Loading...</span></p>
+          <p><strong>Overall Score:</strong> <span id="profile-overall-score">Loading...</span></p>
+        </div>
+        <div class="button-container">
+          <button onclick="logout()" class="action-btn" style="background-color: #e74c3c;">Logout</button>
+          <button class="back-btn" onclick="goBackToQuizListFromProfile()">Back to Quizzes</button>
+        </div>
+      </div>
+  </div> <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
     import {
-      getFirestore, collection, addDoc, deleteDoc,
-      doc, getDoc, getDocs, updateDoc
+      getFirestore, collection, getDocs, doc, getDoc, addDoc, setDoc, query, where
     } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
+    import {
+      getAuth, signInWithEmailAndPassword, onAuthStateChanged, createUserWithEmailAndPassword, signOut
+    } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyDm788npk4qw9RcT7qevq2HPH5-DbSTq2k",
+      apiKey: "AIzaSyDm788npk4qw9RcT7qevq2HPH5-DbSTq2k", // Replace with your actual API key
       authDomain: "location-45133.firebaseapp.com",
       projectId: "location-45133",
       storageBucket: "location-45133.appspot.com",
@@ -163,155 +411,516 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const auth = getAuth(app);
 
-    const questionsContainer = document.getElementById("questions-container");
-    const titleInput = document.getElementById("quiz-title");
-    const descInput = document.getElementById("quiz-description");
-    const formTitle = document.getElementById("form-title");
+    let currentUser = null;
+    let currentUserName = "User";
 
-    let editingQuizId = null;
-    let questionCount = 0;
+    // DOM Elements
+    const appHeaderElement = document.getElementById("app-header");
+    const leaderboardIconContainer = document.getElementById("leaderboard-icon-container");
+    const profileIconContainer = document.getElementById("profile-icon-container");
+    const profileInitialSpan = document.getElementById("profile-initial");
 
-    window.addQuestion = function () {
-      questionCount++;
-      const div = document.createElement("div");
-      div.className = "question-block";
-      const header = document.createElement("div");
-      header.className = "accordion-header";
-      header.textContent = `Question ${questionCount}`;
-      const content = document.createElement("div");
-      content.className = "question-content";
-      content.innerHTML = `
-        <input type="text" class="question-text" placeholder="Enter question">
-        <div class="option-input"><input type="text" placeholder="Option A" class="option"></div>
-        <div class="option-input"><input type="text" placeholder="Option B" class="option"></div>
-        <div class="option-input"><input type="text" placeholder="Option C" class="option"></div>
-        <div class="option-input"><input type="text" placeholder="Option D" class="option"></div>
-        <input type="text" class="answer" placeholder="Correct Answer (must match one option)">
-        <button class="remove-btn" onclick="this.closest('.question-block').remove()">Remove Question</button>
-      `;
-      header.addEventListener("click", () => {
-        header.classList.toggle("active");
-        content.style.display = content.style.display === "block" ? "none" : "block";
-      });
-      div.appendChild(header);
-      div.appendChild(content);
-      questionsContainer.appendChild(div);
-    };
+    const loginBox = document.getElementById("login-box");
+    const quizListBox = document.getElementById("quiz-list");
+    const quizItemsContainer = document.getElementById("quiz-items-container"); // New
+    const quizBox = document.getElementById("quiz-box");
+    const leaderboardBox = document.getElementById("leaderboard-box");
+    const profileDashboardBox = document.getElementById("profile-dashboard");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const regNameInput = document.getElementById("reg-name");
+    const regEmailInput = document.getElementById("reg-email");
+    const regPasswordInput = document.getElementById("reg-password");
+    const registerFormDiv = document.getElementById("register-form");
+    const loginH2Element = document.querySelector("#login-box > h2");
+    const registerH2Element = document.querySelector("#register-form > h2");
+    const emailLoginField = document.getElementById("email");
+    const passwordLoginField = document.getElementById("password");
+    const loginButtonElement = document.querySelector("#login-box button[onclick='login()']");
+    const authToggleDiv = document.getElementById("auth-toggle");
 
-    function clearForm() {
-      titleInput.value = "";
-      descInput.value = "";
-      questionsContainer.innerHTML = "";
-      editingQuizId = null;
-      formTitle.textContent = "Create New Quiz";
-      questionCount = 0;
-    }
+    const quizTitleElement = document.getElementById("quiz-title");
+    const quizDescriptionElement = document.getElementById("quiz-description");
+    const progressBarElement = document.getElementById("progress-bar");
+    const questionBoxDiv = document.getElementById("question-box");
+    const scoreBoxDiv = document.getElementById("score-box");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const submitBtn = document.getElementById("submitBtn");
+    const backToQuizzesBtn = document.getElementById("backToQuizzesBtn");
 
-    window.submitQuiz = async function () {
-      const title = titleInput.value.trim();
-      const description = descInput.value.trim();
-      const questionBlocks = document.querySelectorAll(".question-block");
-      if (!title || !description || questionBlocks.length === 0) {
-        showPopup("Please fill in all fields and add at least one question.");
+    const profileNameSpan = document.getElementById("profile-name");
+    const profileEmailSpan = document.getElementById("profile-email");
+    const profileQuizzesTakenSpan = document.getElementById("profile-quizzes-taken");
+    const profileOverallScoreSpan = document.getElementById("profile-overall-score");
+
+    // Attach event listeners for header icons
+    leaderboardIconContainer.onclick = () => showLeaderboard();
+    profileIconContainer.onclick = () => showProfileDashboard();
+
+
+    // Auth state listener
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        try {
+            const userDocRef = doc(db, "users", currentUser.uid);
+            const userDocSnap = await getDoc(userDocRef);
+            if (userDocSnap.exists()) {
+              currentUserName = userDocSnap.data().name;
+            } else {
+              currentUserName = currentUser.email ? currentUser.email.split('@')[0] : "User";
+              console.warn("User document not found in Firestore for UID:", currentUser.uid);
+            }
+        } catch (error) {
+            console.error("Error fetching user name:", error);
+            currentUserName = currentUser.email ? currentUser.email.split('@')[0] : "User";
+        }
+        profileInitialSpan.textContent = currentUserName.charAt(0).toUpperCase() || 'U';
+        appHeaderElement.style.display = "flex";
+        showQuizListView();
+        loadQuizzes();
+      } else {
+        currentUser = null;
+        currentUserName = "User";
+        profileInitialSpan.textContent = 'U';
+        appHeaderElement.style.display = "none";
+        showLoginView();
+      }
+    });
+
+    window.login = function () {
+      const email = emailInput.value;
+      const password = passwordInput.value;
+      if (!email || !password) {
+        alert("Please enter both email and password.");
         return;
       }
-      const questions = [];
-      questionBlocks.forEach(block => {
-        const q = block.querySelector(".question-text").value.trim();
-        const opts = Array.from(block.querySelectorAll(".option")).map(o => o.value.trim());
-        const ans = block.querySelector(".answer").value.trim();
-        if (!q || opts.some(o => !o) || !ans || !opts.includes(ans)) {
-          showPopup("Each question must be complete. Answer must match one of the options.");
-          throw new Error("Invalid question data");
-        }
-        questions.push({ question: q, options: opts, answer: ans });
-      });
+      loginButtonElement.disabled = true;
+      loginButtonElement.textContent = "Logging in...";
+      signInWithEmailAndPassword(auth, email, password)
+        .catch(err => {
+            alert("Login failed: " + err.message);
+        })
+        .finally(() => {
+            if (!auth.currentUser) {
+                 loginButtonElement.disabled = false;
+                 loginButtonElement.textContent = "Login";
+            }
+        });
+    };
+
+    window.register = async function () {
+      const name = regNameInput.value.trim();
+      const email = regEmailInput.value.trim();
+      const password = regPasswordInput.value;
+      const registerButton = document.querySelector("#register-form button[onclick='register()']");
+
+      if (!name || !email || !password) {
+        alert("Please fill all registration fields.");
+        return;
+      }
+      if (password.length < 6) {
+        alert("Password should be at least 6 characters long.");
+        return;
+      }
+      registerButton.disabled = true;
+      registerButton.textContent = "Registering...";
+
       try {
-        if (editingQuizId) {
-          await updateDoc(doc(db, "quizzes", editingQuizId), { title, description, questions });
-          showPopup("Quiz updated successfully!");
-        } else {
-          await addDoc(collection(db, "quizzes"), { title, description, questions });
-          showPopup("Quiz added successfully!");
-        }
-        clearForm();
-        loadQuizzes();
-      } catch (e) {
-        showPopup("Error saving quiz: " + e.message);
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        await setDoc(doc(db, "users", user.uid), {
+          name: name,
+          email: email,
+          uid: user.uid
+        });
+        alert("Registration successful! Please login.");
+        showLoginForm();
+      } catch (err) {
+        alert("Registration failed: " + err.message);
+      } finally {
+        registerButton.disabled = false;
+        registerButton.textContent = "Register";
       }
     };
 
-    async function loadQuizzes() {
-      const quizList = document.getElementById("quiz-list");
-      quizList.innerHTML = "";
-      const querySnapshot = await getDocs(collection(db, "quizzes"));
-      querySnapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        const quizDiv = document.createElement("div");
-        quizDiv.className = "quiz-box";
-        quizDiv.innerHTML = `
-          <h3>${data.title}</h3>
-          <p>${data.description}</p>
-          <p><strong>${data.questions.length}</strong> question(s)</p>
-          <button class="edit-btn" onclick="editQuiz('${docSnap.id}')">Edit</button>
-          <button class="delete-btn" onclick="deleteQuiz('${docSnap.id}')">Delete</button>
-        `;
-        quizList.appendChild(quizDiv);
-      });
+    window.logout = function() {
+        signOut(auth).catch(error => alert("Logout failed: " + error.message));
     }
 
-    window.deleteQuiz = async function (id) {
-      if (confirm("Are you sure you want to delete this quiz?")) {
-        await deleteDoc(doc(db, "quizzes", id));
-        showPopup("Quiz deleted.");
-        loadQuizzes();
+    window.showRegisterForm = function () {
+      if (loginH2Element) loginH2Element.style.display = "none";
+      emailLoginField.style.display = "none";
+      passwordLoginField.style.display = "none";
+      loginButtonElement.style.display = "none";
+      authToggleDiv.style.display = "none";
+      registerFormDiv.style.display = "block";
+      if(registerH2Element) registerH2Element.style.display = "block";
+    };
+
+    window.showLoginForm = function () {
+      if (loginH2Element) loginH2Element.style.display = "block";
+      emailLoginField.style.display = "block";
+      passwordLoginField.style.display = "block";
+      loginButtonElement.style.display = "block";
+      loginButtonElement.disabled = false;
+      loginButtonElement.textContent = "Login";
+      authToggleDiv.style.display = "block";
+      registerFormDiv.style.display = "none";
+      if(registerH2Element) registerH2Element.style.display = "none";
+      regNameInput.value = "";
+      regEmailInput.value = "";
+      regPasswordInput.value = "";
+    };
+
+    function showView(viewToShow) {
+        [loginBox, quizListBox, quizBox, leaderboardBox, profileDashboardBox].forEach(view => {
+            view.style.display = (view === viewToShow) ? "block" : "none";
+        });
+         // Ensure header is visible for all views except login, handled by onAuthStateChanged and showLoginView
+        if (viewToShow !== loginBox && auth.currentUser) {
+            appHeaderElement.style.display = "flex";
+        } else if (viewToShow === loginBox) {
+            appHeaderElement.style.display = "none";
+        }
+    }
+
+    function showLoginView() {
+        appHeaderElement.style.display = "none"; // Explicitly hide header for login view
+        showView(loginBox);
+        showLoginForm();
+    }
+    function showQuizListView() { showView(quizListBox); }
+    function showQuizTakingView() { showView(quizBox); }
+    function showLeaderboardView() { showView(leaderboardBox); }
+    function showProfileDashboardView() { showView(profileDashboardBox); }
+
+    async function loadQuizzes() {
+      // Clear previous quiz items, messages
+      quizItemsContainer.innerHTML = "";
+
+      try {
+        const querySnapshot = await getDocs(collection(db, "quizzes"));
+        if (querySnapshot.empty) {
+            const noQuizMsg = document.createElement("p");
+            noQuizMsg.textContent = "No quizzes available at the moment.";
+            noQuizMsg.style.textAlign = "center";
+            quizItemsContainer.appendChild(noQuizMsg);
+            return;
+        }
+        querySnapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          const div = document.createElement("div");
+          div.className = "quiz-item";
+          div.innerHTML = `<strong>${data.title}</strong><small>${data.description || 'No description'}</small>`;
+          div.onclick = () => startQuiz(docSnap.id, data);
+          quizItemsContainer.appendChild(div);
+        });
+      } catch (error) {
+          console.error("Error loading quizzes: ", error);
+          alert("Could not load quizzes. Please try again later.");
+          const errorMsg = document.createElement("p");
+          errorMsg.textContent = "Failed to load quizzes.";
+          errorMsg.style.textAlign = "center";
+          errorMsg.style.color = "red";
+          quizItemsContainer.appendChild(errorMsg);
+      }
+    }
+
+    let currentQuizData = null;
+    let currentQuestionIndex = 0;
+    let currentScore = 0;
+    let questionsAttempted = 0;
+    let answersGiven = [];
+    let selectedOptionsMap = [];
+    let quizIdForDb = null;
+
+    async function startQuiz(id, quizData) {
+      quizIdForDb = id;
+      if (quizData) {
+          currentQuizData = quizData;
+      } else {
+          const docSnap = await getDoc(doc(db, "quizzes", id));
+          if (!docSnap.exists()) {
+              alert("Quiz not found!");
+              showQuizListView();
+              return;
+          }
+          currentQuizData = docSnap.data();
+      }
+
+      currentQuestionIndex = 0;
+      currentScore = 0;
+      questionsAttempted = 0;
+      answersGiven = Array(currentQuizData.questions.length).fill(false);
+      selectedOptionsMap = Array(currentQuizData.questions.length).fill(null);
+
+      showQuizTakingView();
+      quizTitleElement.textContent = currentQuizData.title;
+      quizDescriptionElement.textContent = currentQuizData.description || "";
+      quizDescriptionElement.style.display = "block";
+      progressBarElement.parentElement.style.display = "block";
+      scoreBoxDiv.innerHTML = "";
+      submitBtn.style.display = "none";
+      backToQuizzesBtn.style.display = "block";
+      prevBtn.style.display = "inline-block";
+      nextBtn.style.display = "inline-block";
+      questionBoxDiv.innerHTML = "";
+      updateProgressBar();
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      if (!currentQuizData || !currentQuizData.questions || currentQuestionIndex >= currentQuizData.questions.length) {
+          if (currentQuizData && currentQuizData.questions && answersGiven.every(a => a)) {
+            finalizeQuiz();
+          }
+          return;
+      }
+      const q = currentQuizData.questions[currentQuestionIndex];
+      prevBtn.disabled = currentQuestionIndex === 0;
+      nextBtn.disabled = currentQuestionIndex === currentQuizData.questions.length - 1 && answersGiven[currentQuestionIndex];
+
+      const allAnswered = answersGiven.every(a => a === true);
+      if (allAnswered || (currentQuestionIndex === currentQuizData.questions.length - 1 && answersGiven[currentQuestionIndex])) {
+        submitBtn.style.display = "block";
+        nextBtn.disabled = true;
+      } else {
+        submitBtn.style.display = "none";
+      }
+
+      questionBoxDiv.innerHTML = `<h3>Q${currentQuestionIndex + 1}: ${q.question}</h3>`;
+      q.options.forEach(optText => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.textContent = optText;
+
+        if (answersGiven[currentQuestionIndex]) {
+          btn.disabled = true;
+          if (optText === selectedOptionsMap[currentQuestionIndex]) {
+            btn.classList.add(optText === q.answer ? 'correct' : 'incorrect');
+          } else if (optText === q.answer) {
+            btn.classList.add('correct');
+          }
+        } else {
+          btn.onclick = () => handleAnswerSelection(btn, optText, q.answer);
+        }
+        questionBoxDiv.appendChild(btn);
+      });
+      updateProgressBar();
+    }
+
+    function updateProgressBar() {
+      const answeredCount = answersGiven.filter(a => a).length;
+      const totalQuestions = currentQuizData ? currentQuizData.questions.length : 0;
+      const percent = totalQuestions > 0 ? (answeredCount / totalQuestions) * 100 : 0;
+      progressBarElement.style.width = percent + "%";
+    }
+
+    window.handleAnswerSelection = function (btn, selected, correct) {
+      if (answersGiven[currentQuestionIndex]) return;
+
+      const allOptionButtons = questionBoxDiv.querySelectorAll(".option-btn");
+      allOptionButtons.forEach(b => {
+          b.disabled = true;
+          if (b.textContent === correct) b.classList.add('correct');
+      });
+
+      if (selected === correct) {
+        btn.classList.add('correct');
+        if (!answersGiven[currentQuestionIndex]) currentScore++;
+      } else {
+        btn.classList.add('incorrect');
+      }
+
+      if (!answersGiven[currentQuestionIndex]) questionsAttempted++;
+      answersGiven[currentQuestionIndex] = true;
+      selectedOptionsMap[currentQuestionIndex] = selected;
+      updateProgressBar();
+
+      nextBtn.disabled = currentQuestionIndex === currentQuizData.questions.length - 1;
+
+      const allAnswered = answersGiven.every(a => a === true);
+      if (allAnswered || (currentQuestionIndex === currentQuizData.questions.length - 1)) {
+          submitBtn.style.display = "block";
+          nextBtn.disabled = true;
       }
     };
 
-    window.editQuiz = async function (id) {
-      editingQuizId = id;
-      formTitle.textContent = "Edit Quiz";
-      const quizDoc = await getDoc(doc(db, "quizzes", id));
-      const data = quizDoc.data();
-      titleInput.value = data.title;
-      descInput.value = data.description;
-      questionsContainer.innerHTML = "";
-      questionCount = 0;
-      data.questions.forEach(q => {
-        questionCount++;
-        const div = document.createElement("div");
-        div.className = "question-block";
-        const header = document.createElement("div");
-        header.className = "accordion-header";
-        header.textContent = `Question ${questionCount}`;
-        const content = document.createElement("div");
-        content.className = "question-content";
-        content.innerHTML = `
-          <input type="text" class="question-text" value="${q.question}">
-          ${q.options.map(opt => `<div class="option-input"><input type="text" class="option" value="${opt}"></div>`).join("")}
-          <input type="text" class="answer" value="${q.answer}">
-          <button class="remove-btn" onclick="this.closest('.question-block').remove()">Remove Question</button>
+    prevBtn.onclick = () => {
+      if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        renderQuestion();
+      }
+    };
+
+    nextBtn.onclick = () => {
+      if (currentQuestionIndex < currentQuizData.questions.length - 1 && answersGiven[currentQuestionIndex]) {
+        currentQuestionIndex++;
+        renderQuestion();
+      } else if (!answersGiven[currentQuestionIndex]) {
+        alert("Please select an answer before moving to the next question.");
+      }
+    };
+
+    submitBtn.onclick = async () => {
+        if (!answersGiven.every(a => a === true)) {
+            if (!confirm("You have unanswered questions. Are you sure you want to submit?")) {
+                return;
+            }
+        }
+        finalizeQuiz();
+    };
+
+    async function finalizeQuiz() {
+        questionBoxDiv.innerHTML = `<p style="text-align:center; font-size: 1.1rem; color: #2c3e50;">Quiz Completed!</p>`;
+        submitBtn.style.display = "none";
+        prevBtn.style.display = "none";
+        nextBtn.style.display = "none";
+        quizDescriptionElement.style.display = "none";
+        progressBarElement.parentElement.style.display = "none";
+
+        scoreBoxDiv.innerHTML = `
+            <p>Total Questions: <strong>${currentQuizData.questions.length}</strong></p>
+            <p>Attempted: <strong>${questionsAttempted}</strong></p>
+            <p>Correct Answers: <strong>${currentScore}</strong></p>
+            <p>Your Score: <strong>${((currentScore / currentQuizData.questions.length) * 100).toFixed(1)}%</strong></p>
         `;
-        header.addEventListener("click", () => {
-          header.classList.toggle("active");
-          content.style.display = content.style.display === "block" ? "none" : "block";
+        backToQuizzesBtn.textContent = "View Other Quizzes";
+
+        if (currentUser) {
+            try {
+                await addDoc(collection(db, "results"), {
+                    userId: currentUser.uid,
+                    userName: currentUserName,
+                    quizTitle: currentQuizData.title,
+                    quizId: quizIdForDb,
+                    score: currentScore,
+                    totalQuestions: currentQuizData.questions.length,
+                    attempted: questionsAttempted,
+                    timestamp: new Date()
+                });
+            } catch (error) {
+                console.error("Error saving quiz result: ", error);
+                alert("Could not save your quiz result. Please check your connection.");
+            }
+        }
+    }
+
+    window.goBackToQuizList = function () {
+      showQuizListView();
+      quizDescriptionElement.style.display = "block";
+      progressBarElement.parentElement.style.display = "block";
+      scoreBoxDiv.innerHTML = "";
+      backToQuizzesBtn.textContent = "Back to Quizzes";
+    };
+
+    window.showLeaderboard = async function () {
+      showLeaderboardView();
+      const leaderboardTableBody = document.getElementById("leaderboard-table").querySelector("tbody");
+      leaderboardTableBody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>Loading leaderboard...</td></tr>";
+
+      try {
+        const resultsSnapshot = await getDocs(collection(db, "results"));
+        const userScores = {};
+
+        resultsSnapshot.forEach(resDoc => {
+          const resultData = resDoc.data();
+          if (!userScores[resultData.userId]) {
+            userScores[resultData.userId] = { totalScore: 0, name: resultData.userName || 'Anonymous User', uid: resultData.userId };
+          }
+          userScores[resultData.userId].totalScore += resultData.score;
+          if (resultData.userName && resultData.userName !== 'Anonymous User') {
+             userScores[resultData.userId].name = resultData.userName;
+          }
         });
-        div.appendChild(header);
-        div.appendChild(content);
-        questionsContainer.appendChild(div);
-      });
+
+        const usersToFetchNamesFor = Object.values(userScores).filter(u => u.name === 'Anonymous User' || !u.name);
+        if (usersToFetchNamesFor.length > 0) {
+            const userDocsPromises = usersToFetchNamesFor.map(u => getDoc(doc(db, "users", u.uid)));
+            const userDocsSnapshots = await Promise.all(userDocsPromises);
+            userDocsSnapshots.forEach(userDocSnap => {
+                if (userDocSnap.exists()) {
+                    const userData = userDocSnap.data();
+                    if (userScores[userDocSnap.id]) {
+                        userScores[userDocSnap.id].name = userData.name;
+                    }
+                }
+            });
+        }
+
+        const leaderboardArray = Object.values(userScores);
+        leaderboardArray.sort((a, b) => b.totalScore - a.totalScore);
+
+        leaderboardTableBody.innerHTML = "";
+        if (leaderboardArray.length === 0) {
+            leaderboardTableBody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>No scores recorded yet!</td></tr>";
+            return;
+        }
+
+        leaderboardArray.forEach((entry, index) => {
+          const row = leaderboardTableBody.insertRow();
+          row.insertCell().textContent = index + 1;
+          row.insertCell().textContent = entry.name || 'User';
+          row.insertCell().textContent = entry.totalScore;
+        });
+
+      } catch (error) {
+        console.error("Error loading leaderboard: ", error);
+        leaderboardTableBody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>Could not load leaderboard. Try again.</td></tr>";
+      }
     };
 
-    window.showPopup = function(message) {
-      document.getElementById("popup-message").innerText = message;
-      document.getElementById("custom-popup").style.display = "flex";
+    window.goBackToQuizListFromLeaderboard = function() {
+        showQuizListView();
     };
 
-    window.closePopup = function() {
-      document.getElementById("custom-popup").style.display = "none";
+    async function fetchUserProfileStats() {
+        if (!currentUser) return { quizzesTaken: 0, overallScore: 0 };
+        let quizzesTaken = 0;
+        let overallScore = 0;
+        try {
+            const q = query(collection(db, "results"), where("userId", "==", currentUser.uid));
+            const querySnapshot = await getDocs(q);
+            quizzesTaken = querySnapshot.size;
+            querySnapshot.forEach(doc => {
+                overallScore += doc.data().score;
+            });
+            return { quizzesTaken, overallScore };
+        } catch (error) {
+            console.error("Error fetching user profile stats:", error);
+            return { quizzesTaken: 0, overallScore: 0 };
+        }
+    }
+
+    window.showProfileDashboard = async function() {
+        if (!currentUser) {
+            showLoginView();
+            return;
+        }
+        showProfileDashboardView();
+        profileNameSpan.textContent = currentUserName;
+        profileEmailSpan.textContent = currentUser.email;
+        profileQuizzesTakenSpan.textContent = "Loading...";
+        profileOverallScoreSpan.textContent = "Loading...";
+        const stats = await fetchUserProfileStats();
+        profileQuizzesTakenSpan.textContent = stats.quizzesTaken;
+        profileOverallScoreSpan.textContent = stats.overallScore;
+    }
+
+    window.goBackToQuizListFromProfile = function() {
+        showQuizListView();
     };
 
-    loadQuizzes();
-  </script></body>
+    // Initial view setup
+    if (!auth.currentUser) { // If no user on initial load, show login view and ensure header is hidden.
+        appHeaderElement.style.display = "none";
+        showLoginView();
+    }
+    // onAuthStateChanged will handle further logic if user is already logged in or logs in/out.
+  </script>
+</body>
 </html>
