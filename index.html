@@ -15,6 +15,11 @@
       color: #2c3e50;
       margin-top: 0; /* Adjust for tab content */
     }
+    h4 {
+        margin-top: 15px;
+        margin-bottom: 10px;
+        color: #34495e;
+    }
     input, textarea, button, select {
       display: block;
       width: 100%;
@@ -117,6 +122,10 @@
     }
     .ai-review-item .keep-question-label { display: inline-block; margin-left: 5px; font-weight: normal; }
     .ai-review-item input[type="checkbox"] { width: auto; margin-right: 5px; vertical-align: middle; }
+    #ai-destination-options input[type="radio"] { width: auto; margin-right: 5px; vertical-align: middle; }
+    #ai-destination-options label { font-weight: normal; margin-top: 0; }
+    #ai-destination-options div { margin-bottom:10px; }
+
 
     .empty-list-message { text-align: center; color: #777; padding: 20px; font-style: italic; }
     .api-key-warning {
@@ -162,9 +171,43 @@
       .tab-button.active { border-bottom: 1px solid #ccc; }
 
     }
-    .popup-overlay { /* ... existing popup styles ... */ }
-    .popup-box { /* ... existing popup styles ... */ }
-    /* Minimal adjustments from previous provided CSS, mainly focus on tabs */
+    .popup-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.5); display: none; justify-content: center;
+        align-items: center; z-index: 1000;
+    }
+    .popup-box {
+        background: #fff; padding: 25px; border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center;
+        min-width: 300px; max-width: 90%;
+    }
+    .popup-box p { margin: 0 0 15px 0; font-size: 16px; }
+    .popup-box button {
+        background-color: #3498db; color: #fff; border: none; padding: 10px 20px;
+        border-radius: 5px; cursor: pointer; font-size: 16px;
+        width: auto; /* Override default */
+        display: inline-block; /* Override default */
+    }
+    .popup-box button:hover { background-color: #2980b9; }
+
+    #ai-destination-options {
+        margin-top: 20px; padding: 15px; background-color: #e9f5fe;
+        border: 1px solid #c5e0f0; border-radius: 6px;
+    }
+    #ai-destination-options h4 {
+        margin-top: 0; margin-bottom: 15px; color: #2c3e50;
+    }
+    #ai-destination-options label {
+      display: inline-block; margin-bottom: 5px; font-weight: 500; margin-right: 15px;
+    }
+    #ai-destination-options input[type="radio"] {
+      width: auto; margin-right: 5px; vertical-align: baseline;
+    }
+     #ai-destination-options .radio-group { margin-bottom: 10px; }
+
+    #ai-new-quiz-fields input, #ai-new-quiz-fields textarea { margin: 5px 0 10px 0; }
+    #ai-existing-quiz-fields select { margin: 5px 0 10px 0; }
+
   </style>
 </head>
 <body>
@@ -199,13 +242,13 @@
         <strong>Security Warning:</strong> For development/personal use, you can enter your API key below.
         For a production application accessible by others, **never expose your API key directly in client-side code.**
         Use a backend proxy (like Firebase Functions) to handle API calls securely.
-        **Do NOT commit your API key to version control (Git).**
+        **Do NOT commit your AI API key to version control (Git).**
       </div>
       <label for="ai-api-key">Your AI Model API Key (e.g., Google Gemini API Key):</label>
-      <input type="password" id="ai-api-key" placeholder="Paste your AI API Key here">
+      <input type="password" id="ai-api-key" placeholder="Paste your AI API Key here" value="AIzaSyDDsqdPO91ylksmvEtQKO6X9MeQgaS0Y20">
 
       <label for="ai-api-endpoint">AI API Endpoint URL (e.g., for Gemini):</label>
-      <input type="text" id="ai-api-endpoint" placeholder="https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent">
+      <input type="text" id="ai-api-endpoint" placeholder="https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent" value="https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyDDsqdPO91ylksmvEtQKO6X9MeQgaS0Y20">
 
       <label for="ai-quiz-topic">Topic for AI Quiz:</label>
       <input type="text" id="ai-quiz-topic" placeholder="e.g., The Renaissance, Basic Algebra">
@@ -214,11 +257,36 @@
       <textarea id="ai-source-text" rows="5" placeholder="Paste an article or notes for the AI to base questions on..."></textarea>
 
       <label for="ai-num-questions">Number of Questions to Generate:</label>
-      <input type="number" id="ai-num-questions" value="5" min="1" max="15"> <button id="generate-ai-quiz-btn" class="generate-btn" onclick="generateAIQuiz()">Generate Quiz with AI</button>
+      <input type="number" id="ai-num-questions" value="5" min="1" max="15">
+      <button id="generate-ai-quiz-btn" class="generate-btn" onclick="generateAIQuiz()">Generate Quiz with AI</button>
 
       <div id="ai-review-container" style="margin-top: 20px;">
         </div>
-      <button id="add-approved-ai-btn" class="add-btn" style="display:none; margin-top:10px;" onclick="addApprovedAIQuestionsToForm()">Add Approved Questions to Form</button>
+
+      <div id="ai-destination-options" style="display:none;">
+        <h4>Where to save these AI questions?</h4>
+        <div class="radio-group">
+            <input type="radio" name="aiQuizDestination" id="ai-create-new-quiz-radio" value="new" checked onchange="toggleAIDestinationFields()">
+            <label for="ai-create-new-quiz-radio">Create a New Quiz</label>
+        </div>
+        <div id="ai-new-quiz-fields">
+          <label for="ai-new-quiz-title">New Quiz Title:</label>
+          <input type="text" id="ai-new-quiz-title" placeholder="Enter title for the new AI-generated quiz">
+          <label for="ai-new-quiz-description">New Quiz Description:</label>
+          <textarea id="ai-new-quiz-description" rows="2" placeholder="Enter description for the new quiz"></textarea>
+        </div>
+        <div class="radio-group">
+            <input type="radio" name="aiQuizDestination" id="ai-add-to-existing-quiz-radio" value="existing" onchange="toggleAIDestinationFields()">
+            <label for="ai-add-to-existing-quiz-radio">Add to an Existing Quiz</label>
+        </div>
+        <div id="ai-existing-quiz-fields" style="display:none;">
+          <label for="ai-existing-quiz-select">Select Quiz:</label>
+          <select id="ai-existing-quiz-select">
+            <option value="">-- Select an Existing Quiz --</option>
+          </select>
+        </div>
+      </div>
+      <button id="process-approved-ai-btn" class="add-btn" style="display:none; margin-top:10px;" onclick="handleApprovedAIQuestions()">Process Approved Questions</button>
     </div>
   </div>
 
@@ -266,7 +334,13 @@
     const aiNumQuestionsInput = document.getElementById("ai-num-questions");
     const generateAIQuizBtn = document.getElementById("generate-ai-quiz-btn");
     const aiReviewContainer = document.getElementById("ai-review-container");
-    const addApprovedAIBtn = document.getElementById("add-approved-ai-btn");
+    const processApprovedAIBtn = document.getElementById("process-approved-ai-btn");
+    const aiDestinationOptionsDiv = document.getElementById("ai-destination-options");
+    const aiNewQuizFieldsDiv = document.getElementById("ai-new-quiz-fields");
+    const aiExistingQuizFieldsDiv = document.getElementById("ai-existing-quiz-fields");
+    const aiNewQuizTitleInput = document.getElementById("ai-new-quiz-title");
+    const aiNewQuizDescInput = document.getElementById("ai-new-quiz-description");
+    const aiExistingQuizSelect = document.getElementById("ai-existing-quiz-select");
 
 
     let editingQuizId = null;
@@ -284,21 +358,23 @@
         tabbuttons[i].className = tabbuttons[i].className.replace(" active", "");
       }
       document.getElementById(tabName).style.display = "block";
-      if (evt) evt.currentTarget.className += " active";
+      if (evt && evt.currentTarget) evt.currentTarget.className += " active";
+      else if (evt === null && tabName === 'manualQuizTab') { // Programmatic switch
+          document.getElementById('defaultOpenTab').className += " active";
+      }
     }
-    // Get the element with id="defaultOpenTab" and click on it
     document.getElementById("defaultOpenTab").click();
 
 
     // --- AI Quiz Generation Functions ---
     window.generateAIQuiz = async function() {
         const apiKey = aiApiKeyInput.value.trim();
-        const apiEndpoint = aiApiEndpointInput.value.trim(); // User provides this
+        const apiEndpoint = aiApiEndpointInput.value.trim();
         const topic = aiQuizTopicInput.value.trim();
         const sourceText = aiSourceTextInput.value.trim();
         const numQuestions = parseInt(aiNumQuestionsInput.value, 10);
 
-        if (!apiKey) { showPopup("Please enter your AI Model API Key."); return; }
+        if (apiKey === "YOUR_GEMINI_API_KEY_HERE" || !apiKey) { showPopup("Please enter your actual AI Model API Key."); return; }
         if (!apiEndpoint) { showPopup("Please enter the AI API Endpoint URL."); return; }
         if (!topic) { showPopup("Please enter a topic for the AI quiz."); return; }
         if (isNaN(numQuestions) || numQuestions < 1 || numQuestions > 15) {
@@ -308,10 +384,9 @@
         generateAIQuizBtn.disabled = true;
         generateAIQuizBtn.textContent = "Generating... Please Wait...";
         aiReviewContainer.innerHTML = '<p>Generating questions with AI... This may take a moment.</p>';
-        addApprovedAIBtn.style.display = "none";
+        processApprovedAIBtn.style.display = "none";
+        aiDestinationOptionsDiv.style.display = "none";
 
-        // ** IMPORTANT: Customize this prompt for Google Gemini or your specific AI model! **
-        // This prompt asks for JSON output directly.
         let promptText = `Generate ${numQuestions} unique multiple-choice quiz questions about the topic: "${topic}".
 Each question should have exactly 4 distinct options.
 Clearly indicate the single correct answer for each question.
@@ -325,46 +400,22 @@ Example of one object in the JSON array:
   "questionText": "What is the capital of France?",
   "options": ["Paris", "London", "Berlin", "Rome"],
   "correctAnswer": "Paris"
-}
-`;
+}`;
         if (sourceText) {
             promptText += `\n\nBase the questions on the following text if possible:\n"${sourceText}"`;
         }
 
-        // For Google Gemini API (keys from AI Studio), the key is often sent IN THE URL or as 'x-goog-api-key' header.
-        // The endpoint URL from input should be like: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent
-        // The API key will be added to this URL if not already there.
         let finalApiEndpoint = apiEndpoint;
-        if (!finalApiEndpoint.includes('?key=')) { // Check if key is already in URL
-             // If using x-goog-api-key header, this isn't needed in URL. But for simplicity for user input,
-             // let's assume they might provide URL with or without key. If using header method, key goes in header.
-             // For this example, let's assume the key will be in the header if not in URL.
-        }
-
 
         try {
-            const requestBody = { // Structure for Gemini API
-                "contents": [{
-                    "parts": [{
-                        "text": promptText
-                    }]
-                }],
-                "generationConfig": { // Optional: customize generation
-                    "temperature": 0.7,
-                    "maxOutputTokens": 2048,
-                    // "responseMimeType": "application/json", // If your model supports this, it's great!
-                }
+            const requestBody = {
+                "contents": [{"parts": [{"text": promptText}]}],
+                "generationConfig": {"temperature": 0.7, "maxOutputTokens": 2048 }
             };
 
             const response = await fetch(finalApiEndpoint, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // For Gemini API keys from Google AI Studio:
-                    'x-goog-api-key': apiKey
-                    // If your API uses a Bearer token (less common for simple Gemini keys from AI Studio):
-                    // 'Authorization': `Bearer ${apiKey}`
-                },
+                headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
                 body: JSON.stringify(requestBody)
             });
 
@@ -375,11 +426,14 @@ Example of one object in the JSON array:
             }
 
             const data = await response.json();
-            const generatedQuestions = parseGeminiAIResponse(data); // Use Gemini specific parser
+            const generatedQuestions = parseGeminiAIResponse(data);
 
             if (generatedQuestions && generatedQuestions.length > 0) {
                 displayAIQuestionsForReview(generatedQuestions);
-                addApprovedAIBtn.style.display = "block";
+                await populateExistingQuizzesDropdown(); // Populate dropdown for "add to existing"
+                aiDestinationOptionsDiv.style.display = "block";
+                processApprovedAIBtn.style.display = "block";
+                toggleAIDestinationFields(); // Ensure correct fields are shown based on default radio
             } else {
                 aiReviewContainer.innerHTML = '<p style="color: orange;">AI did not return questions in the expected format, or returned no questions. Check console for API response.</p>';
                 console.warn("Raw AI Response:", data);
@@ -395,26 +449,22 @@ Example of one object in the JSON array:
         }
     };
 
-    // ** IMPORTANT: This function is specifically tailored for a Gemini API-like response
-    // where the AI is prompted to return a JSON string within its text output. **
     function parseGeminiAIResponse(apiResponse) {
         try {
-            // Gemini often returns the JSON string within candidates[0].content.parts[0].text
             if (apiResponse.candidates && apiResponse.candidates[0] &&
                 apiResponse.candidates[0].content && apiResponse.candidates[0].content.parts &&
                 apiResponse.candidates[0].content.parts[0] && apiResponse.candidates[0].content.parts[0].text) {
 
                 let jsonString = apiResponse.candidates[0].content.parts[0].text;
-                // Sometimes the JSON string might be wrapped in markdown ```json ... ```
                 jsonString = jsonString.replace(/^```json\s*|```\s*$/g, '').trim();
 
-                const parsedJson = JSON.parse(jsonString); // This is the array of question objects
+                const parsedJson = JSON.parse(jsonString);
                 if (Array.isArray(parsedJson)) {
                     return parsedJson.map(q => ({
                         questionText: q.questionText || q.question || "",
                         options: Array.isArray(q.options) && q.options.length === 4 ? q.options : ["", "", "", ""],
                         correctAnswer: q.correctAnswer || q.answer || ""
-                    }));
+                    })).filter(q => q.questionText && q.options.every(opt => opt !== undefined) && q.correctAnswer); // Basic validation
                 }
             }
             console.error("Could not find expected JSON structure in AI response:", apiResponse);
@@ -426,9 +476,8 @@ Example of one object in the JSON array:
         }
     }
 
-
     function displayAIQuestionsForReview(questions) {
-        aiReviewContainer.innerHTML = '<h3>Review AI-Generated Questions:</h3> <p>Edit as needed and check "Keep" for questions to add to the form.</p>';
+        aiReviewContainer.innerHTML = '<h3>Review AI-Generated Questions:</h3> <p>Edit as needed and check "Keep" for questions to use.</p>';
         questions.forEach((q, index) => {
             const reviewItemId = `ai-q-${index}`;
             const itemDiv = document.createElement('div');
@@ -453,20 +502,71 @@ Example of one object in the JSON array:
                     <label for="${reviewItemId}-keep" class="keep-question-label">Keep this question</label>
                 </div>`;
             aiReviewContainer.appendChild(itemDiv);
-            updateAnswerDropdown(itemDiv);
+            updateAnswerDropdown(itemDiv); // Populate dropdown
             const answerSelect = itemDiv.querySelector('.answer-select');
-            if (q.correctAnswer && (q.options || []).map(o => o.trim()).includes(q.correctAnswer.trim())) {
-                 answerSelect.value = q.correctAnswer;
-            } else if (q.correctAnswer) {
-                console.warn(`AI answer "${q.correctAnswer}" for Q${index+1} not found in its provided options after trim. Manual selection needed.`);
+             // Try to set the correct answer, ensuring it exists in the options
+            const trimmedCorrectAnswer = q.correctAnswer.trim();
+            const trimmedOptions = (q.options || []).map(o => o.trim());
+            if (trimmedCorrectAnswer && trimmedOptions.includes(trimmedCorrectAnswer)) {
+                 answerSelect.value = trimmedCorrectAnswer;
+            } else if (q.correctAnswer) { // If AI gave an answer, but it's not in options
+                // Add it as a new option and select it, or warn user
+                const newOpt = document.createElement('option');
+                newOpt.value = trimmedCorrectAnswer;
+                newOpt.textContent = trimmedCorrectAnswer + " (AI's original answer)";
+                // answerSelect.appendChild(newOpt); // Decide if you want to auto-add
+                // answerSelect.value = trimmedCorrectAnswer;
+                console.warn(`AI answer "${q.correctAnswer}" for Q${index+1} not found in its provided options. Manual selection might be needed.`);
             }
         });
     }
 
-    window.addApprovedAIQuestionsToForm = function() {
+    async function populateExistingQuizzesDropdown() {
+        aiExistingQuizSelect.innerHTML = '<option value="">-- Select an Existing Quiz --</option>'; // Reset
+        try {
+            const querySnapshot = await getDocs(collection(db, "quizzes"));
+            if (querySnapshot.empty) {
+                const option = document.createElement('option');
+                option.value = "";
+                option.textContent = "No existing quizzes found";
+                option.disabled = true;
+                aiExistingQuizSelect.appendChild(option);
+                // Disable "add to existing" if no quizzes
+                document.getElementById('ai-add-to-existing-quiz-radio').disabled = true;
+                if (document.getElementById('ai-add-to-existing-quiz-radio').checked) {
+                    document.getElementById('ai-create-new-quiz-radio').checked = true;
+                    toggleAIDestinationFields();
+                }
+            } else {
+                 document.getElementById('ai-add-to-existing-quiz-radio').disabled = false;
+                querySnapshot.forEach(docSnap => {
+                    const quiz = docSnap.data();
+                    const option = document.createElement('option');
+                    option.value = docSnap.id;
+                    option.textContent = quiz.title || "Untitled Quiz";
+                    aiExistingQuizSelect.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error("Error loading existing quizzes for dropdown:", error);
+            showPopup("Could not load existing quizzes for AI options.");
+        }
+    }
+
+    window.toggleAIDestinationFields = function() {
+        if (document.getElementById('ai-create-new-quiz-radio').checked) {
+            aiNewQuizFieldsDiv.style.display = "block";
+            aiExistingQuizFieldsDiv.style.display = "none";
+        } else {
+            aiNewQuizFieldsDiv.style.display = "none";
+            aiExistingQuizFieldsDiv.style.display = "block";
+        }
+    }
+
+    window.handleApprovedAIQuestions = async function() {
         const reviewItems = aiReviewContainer.querySelectorAll('.ai-review-item');
-        let questionsAddedCount = 0;
-        reviewItems.forEach(item => {
+        const approvedQuestions = [];
+        reviewItems.forEach((item, index) => {
             const keepCheckbox = item.querySelector('.ai-q-keep');
             if (keepCheckbox && keepCheckbox.checked) {
                 const questionText = item.querySelector('.ai-q-text').value.trim();
@@ -474,48 +574,79 @@ Example of one object in the JSON array:
                 const correctAnswer = item.querySelector('.ai-q-answer').value;
 
                 if (!questionText || options.some(o => !o) || options.length !== 4 || !correctAnswer) {
-                    showPopup(`Skipping an incompletely reviewed AI question (Question ${Array.from(reviewItems).indexOf(item) + 1}). Ensure all fields are filled and answer selected.`);
-                    return; // Skip this question
+                    showPopup(`Skipping incompletely reviewed AI question ${index + 1}. All fields and correct answer must be set.`);
+                    return; // Skip this question but continue processing others
                 }
-
-                window.addQuestion(); // Creates an empty block in the main form
-                const newQuestionBlocks = questionsContainer.querySelectorAll('.question-block');
-                const targetBlock = newQuestionBlocks[newQuestionBlocks.length - 1];
-
-                if (targetBlock) {
-                    targetBlock.querySelector('.question-text').value = questionText;
-                    const optionInputs = targetBlock.querySelectorAll('.option');
-                    optionInputs.forEach((input, i) => input.value = options[i] || '');
-                    updateAnswerDropdown(targetBlock);
-                    targetBlock.querySelector('.answer-select').value = correctAnswer;
-                    questionsAddedCount++;
-                }
+                approvedQuestions.push({ question: questionText, options: options, answer: correctAnswer });
             }
         });
 
-        if (questionsAddedCount > 0) {
-            showPopup(`${questionsAddedCount} AI-generated question(s) added to the current quiz form.`);
-            // Optionally switch to the manual quiz tab
-            openTab(null, 'manualQuizTab');
-            // Highlight the first newly added question or scroll to it
-             if (questionsContainer.lastChild) {
-                questionsContainer.lastChild.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                const header = questionsContainer.lastChild.querySelector('.accordion-header');
-                if (header && !header.classList.contains('active')) {
-                    header.click(); // Expand it
-                }
-            }
-
-        } else {
+        if (approvedQuestions.length === 0) {
             showPopup("No AI-generated questions were marked to be kept or none were complete.");
+            return;
         }
-        aiReviewContainer.innerHTML = "";
-        addApprovedAIBtn.style.display = "none";
+
+        const destination = document.querySelector('input[name="aiQuizDestination"]:checked').value;
+        processApprovedAIBtn.disabled = true;
+        processApprovedAIBtn.textContent = "Processing...";
+
+        try {
+            if (destination === "new") {
+                const newTitle = aiNewQuizTitleInput.value.trim();
+                const newDescription = aiNewQuizDescInput.value.trim();
+                if (!newTitle) {
+                    showPopup("Please enter a title for the new AI-generated quiz.");
+                    return;
+                }
+                if (!newDescription) {
+                    showPopup("Please enter a description for the new AI-generated quiz.");
+                    return;
+                }
+                await addDoc(collection(db, "quizzes"), {
+                    title: newTitle,
+                    description: newDescription,
+                    questions: approvedQuestions
+                });
+                showPopup(`Successfully created new quiz "${newTitle}" with ${approvedQuestions.length} AI question(s).`);
+                aiNewQuizTitleInput.value = "";
+                aiNewQuizDescInput.value = "";
+
+            } else if (destination === "existing") {
+                const selectedQuizId = aiExistingQuizSelect.value;
+                if (!selectedQuizId) {
+                    showPopup("Please select an existing quiz to add questions to.");
+                    return;
+                }
+                const quizDocRef = doc(db, "quizzes", selectedQuizId);
+                const quizDocSnap = await getDoc(quizDocRef);
+
+                if (!quizDocSnap.exists()) {
+                    showPopup("Error: Selected existing quiz not found.");
+                    return;
+                }
+                const existingData = quizDocSnap.data();
+                const combinedQuestions = [...(existingData.questions || []), ...approvedQuestions];
+                await updateDoc(quizDocRef, { questions: combinedQuestions });
+                showPopup(`Successfully added ${approvedQuestions.length} AI question(s) to quiz "${existingData.title}".`);
+            }
+            // Cleanup after successful operation
+            aiReviewContainer.innerHTML = "";
+            aiDestinationOptionsDiv.style.display = "none";
+            processApprovedAIBtn.style.display = "none";
+            loadQuizzes(); // Refresh the main quiz list
+
+        } catch (error) {
+            console.error("Error processing approved AI questions:", error);
+            showPopup("Error saving AI questions: " + error.message);
+        } finally {
+            processApprovedAIBtn.disabled = false;
+            processApprovedAIBtn.textContent = "Process Approved Questions";
+        }
     };
 
 
     // --- Manual Quiz Form Functions ---
-    function updateAnswerDropdown(questionBlockContainer) {
+    window.updateAnswerDropdown = function (questionBlockContainer) { // Made window. for oninput
         const optionInputs = questionBlockContainer.querySelectorAll(".option, .ai-q-option");
         const answerSelect = questionBlockContainer.querySelector(".answer-select, .ai-q-answer");
         if (!answerSelect) return;
@@ -540,7 +671,7 @@ Example of one object in the JSON array:
         if (anOptionMatchedPrevious) {
             answerSelect.value = previouslySelectedAnswer;
         } else {
-            answerSelect.value = ""; // Default to placeholder if previous selection is no longer valid
+            answerSelect.value = "";
         }
     }
 
@@ -586,21 +717,9 @@ Example of one object in the JSON array:
         const qBlocks = questionsContainer.querySelectorAll('.question-block');
         qBlocks.forEach((block, index) => {
             const header = block.querySelector('.accordion-header');
-            const iconSpan = header.querySelector('.accordion-icon'); // Get the span itself
-            // Preserve existing icon state by checking current transform directly
+            const iconSpan = header.querySelector('.accordion-icon');
             const currentIconTransform = iconSpan.style.transform;
-            header.innerHTML = `<span class="accordion-icon" style="transform: ${currentIconTransform};">►</span> Question ${index + 1}`;
-             // Re-find the icon span to ensure style is applied if innerHTML was totally replaced.
-            const newIconSpan = header.querySelector('.accordion-icon');
-            if (newIconSpan) newIconSpan.style.transform = currentIconTransform; // Re-apply
-            if (header.classList.contains('active')) { // Ensure ▼ if active
-                 if(newIconSpan) newIconSpan.textContent = '▼'; // Or rotate correctly
-                 if(newIconSpan) newIconSpan.style.transform = "rotate(90deg)";
-            } else {
-                 if(newIconSpan) newIconSpan.textContent = '►';
-                 if(newIconSpan) newIconSpan.style.transform = "rotate(0deg)";
-            }
-
+            header.childNodes[1].nodeValue = ` Question ${index + 1}`; // Update text node directly
         });
     }
 
@@ -609,13 +728,16 @@ Example of one object in the JSON array:
       editingQuizId = null; formTitle.textContent = "Create New Quiz";
       submitQuizBtn.textContent = "Save Quiz"; cancelEditBtn.style.display = "none";
       questionCounter = 0;
-      aiReviewContainer.innerHTML = ""; addApprovedAIBtn.style.display = "none";
-      // aiQuizTopicInput.value = ""; aiSourceTextInput.value = ""; // Optionally clear AI form too
+      // Clear AI form elements potentially related to manual form interaction (none directly now)
+      aiReviewContainer.innerHTML = "";
+      aiDestinationOptionsDiv.style.display = "none";
+      processApprovedAIBtn.style.display = "none";
+      // aiQuizTopicInput.value = ""; aiSourceTextInput.value = ""; // Optionally clear these
     }
 
     window.cancelEdit = function() { clearForm(); }
 
-    window.submitQuiz = async function () { /* ... existing submitQuiz logic ... */
+    window.submitQuiz = async function () {
       const title = titleInput.value.trim();
       const description = descInput.value.trim();
       const questionBlocks = questionsContainer.querySelectorAll(".question-block");
@@ -656,11 +778,12 @@ Example of one object in the JSON array:
         showPopup("Error saving quiz: " + e.message);
       } finally {
         submitQuizBtn.disabled = false;
-        submitQuizBtn.textContent = formTitle.textContent === "Edit Quiz" ? "Update Quiz" : "Save Quiz";
+        // Use the form title to determine button text, as editingQuizId might be cleared
+        submitQuizBtn.textContent = document.getElementById("form-title").textContent === "Edit Quiz" ? "Update Quiz" : "Save Quiz";
       }
     };
 
-    async function loadQuizzes() { /* ... existing loadQuizzes logic ... */
+    async function loadQuizzes() {
       quizListDiv.innerHTML = "";
       try {
         const querySnapshot = await getDocs(collection(db, "quizzes"));
@@ -674,7 +797,7 @@ Example of one object in the JSON array:
           quizDiv.className = "existing-quiz-item";
           quizDiv.innerHTML = `
             <h3>${data.title}</h3>
-            <p>${data.description.substring(0,100)}${data.description.length > 100 ? '...' : ''}</p>
+            <p>${data.description ? data.description.substring(0,100) : ''}${data.description && data.description.length > 100 ? '...' : ''}</p>
             <p><strong>${data.questions ? data.questions.length : 0}</strong> question(s)</p>
             <div>
                 <button class="edit-quiz-btn" onclick="editQuiz('${docSnap.id}')">Edit</button>
@@ -688,13 +811,13 @@ Example of one object in the JSON array:
       }
     }
 
-    window.deleteQuiz = async function (id) { /* ... existing deleteQuiz logic ... */
+    window.deleteQuiz = async function (id) {
       if (confirm("Are you sure you want to delete this quiz? This action cannot be undone.")) {
         try {
             await deleteDoc(doc(db, "quizzes", id));
             showPopup("Quiz deleted successfully.");
             loadQuizzes();
-            if (editingQuizId === id) { clearForm(); }
+            if (editingQuizId === id) { clearForm(); } // If deleting the quiz being edited, clear form
         } catch (error) {
             console.error("Error deleting quiz:", error);
             showPopup("Error deleting quiz: " + error.message);
@@ -702,15 +825,25 @@ Example of one object in the JSON array:
       }
     };
 
-    window.editQuiz = async function (id) { /* ... existing editQuiz logic, with UI adjustments for tabs ... */
-      openTab(null, 'manualQuizTab'); // Ensure manual tab is active
-      document.querySelector('.quiz-form-box').scrollIntoView({ behavior: 'smooth' });
+    window.editQuiz = async function (id) {
+      openTab(null, 'manualQuizTab');
+      const formBox = document.querySelector('.quiz-form-box');
+      if (formBox) formBox.scrollIntoView({ behavior: 'smooth' });
 
-      aiReviewContainer.innerHTML = ""; addApprovedAIBtn.style.display = "none"; // Clear AI section
+      // Clear any pending AI review stuff if user clicks edit on manual tab
+      aiReviewContainer.innerHTML = "";
+      aiDestinationOptionsDiv.style.display = "none";
+      processApprovedAIBtn.style.display = "none";
+
       try {
         const quizDocRef = doc(db, "quizzes", id);
         const quizDoc = await getDoc(quizDocRef);
-        if (!quizDoc.exists()) { showPopup("Quiz not found."); loadQuizzes(); return; }
+        if (!quizDoc.exists()) {
+            showPopup("Quiz not found. It might have been deleted.");
+            loadQuizzes(); // Refresh list
+            clearForm(); // Clear form as the quiz is gone
+            return;
+        }
 
         editingQuizId = id;
         formTitle.textContent = "Edit Quiz";
@@ -718,35 +851,39 @@ Example of one object in the JSON array:
         cancelEditBtn.style.display = "inline-block";
 
         const data = quizDoc.data();
-        titleInput.value = data.title; descInput.value = data.description;
-        questionsContainer.innerHTML = ""; questionCounter = 0;
+        titleInput.value = data.title || ""; descInput.value = data.description || "";
+        questionsContainer.innerHTML = ""; questionCounter = 0; // Reset for new questions
 
         if (data.questions && Array.isArray(data.questions)) {
             data.questions.forEach((q) => {
-              window.addQuestion();
+              window.addQuestion(); // This increments questionCounter and creates block
               const newQuestionBlocks = questionsContainer.querySelectorAll('.question-block');
-              const targetBlock = newQuestionBlocks[newQuestionBlocks.length - 1];
+              const targetBlock = newQuestionBlocks[newQuestionBlocks.length - 1]; // Get the last added block
               if(targetBlock){
                   targetBlock.querySelector('.question-text').value = q.question || '';
                   const optionInputs = targetBlock.querySelectorAll('.option');
                   const formOptions = q.options && q.options.length === 4 ? q.options : ["", "", "", ""];
                   optionInputs.forEach((input, i) => input.value = formOptions[i] || '');
-                  updateAnswerDropdown(targetBlock);
+
+                  updateAnswerDropdown(targetBlock); // Populate and set correct answer
                   const answerSelect = targetBlock.querySelector('.answer-select');
                   answerSelect.value = q.answer || "";
-                  if (!answerSelect.value && q.answer) { console.warn(`Loaded answer "${q.answer}" for Q "${q.question}" not found.`); }
+                  if (!answerSelect.value && q.answer) {
+                      console.warn(`Loaded answer "${q.answer}" for Q "${q.question}" not found in options after populating dropdown.`);
+                  }
                   
                   const qContent = targetBlock.querySelector('.question-content');
                   const qHeader = targetBlock.querySelector('.accordion-header');
                   const qIcon = qHeader.querySelector('.accordion-icon');
-                  if (data.questions.length > 1) { // Collapse if more than one question
+                  // Collapse all but the first question when editing for tidiness
+                  if (questionsContainer.children.length > 1) {
                     qContent.style.display = "none";
                     qHeader.classList.remove('active');
-                    qIcon.style.transform = "rotate(0deg)";
-                  } else { // Keep expanded if only one question
+                    if(qIcon) qIcon.style.transform = "rotate(0deg)";
+                  } else { // Keep first expanded
                     qContent.style.display = "block";
                     qHeader.classList.add('active');
-                    qIcon.style.transform = "rotate(90deg)";
+                    if(qIcon) qIcon.style.transform = "rotate(90deg)";
                   }
               }
             });
@@ -754,19 +891,21 @@ Example of one object in the JSON array:
       } catch (error) {
           console.error("Error loading quiz for editing:", error);
           showPopup("Could not load quiz for editing: " + error.message);
-          clearForm();
+          clearForm(); // Reset form on error
       }
     };
 
-    window.showPopup = function(message) { /* ... existing showPopup ... */
+    window.showPopup = function(message) {
       document.getElementById("popup-message").innerText = message;
       document.getElementById("custom-popup").style.display = "flex";
     };
-    window.closePopup = function() { /* ... existing closePopup ... */
+    window.closePopup = function() {
       document.getElementById("custom-popup").style.display = "none";
     };
 
+    // Initial load
     loadQuizzes();
+    toggleAIDestinationFields(); // Set initial state for AI destination fields
   </script>
 </body>
 </html>
