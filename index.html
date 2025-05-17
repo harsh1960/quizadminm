@@ -1,64 +1,101 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html>
+<html>
 <head>
   <title>Admin Panel - Manage Quizzes</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', Roboto, Arial, sans-serif; /* Modern font stack */
       padding: 20px;
-      background: #f9f9f9;
+      background: #f4f7f6; /* Lighter gray */
       margin: 0;
+      color: #333;
     }
     h2, h3 {
-      color: #333;
+      color: #2c3e50; /* Darker blue-gray */
     }
     input, textarea, button, select {
       display: block;
       width: 100%;
-      margin: 8px 0;
-      padding: 10px;
+      margin: 10px 0; /* Increased margin */
+      padding: 12px; /* Increased padding */
       font-size: 16px;
-      border-radius: 4px;
+      border-radius: 6px; /* Slightly more rounded */
       border: 1px solid #ccc;
       box-sizing: border-box;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
     }
-    .quiz-box, .question-block {
+    input:focus, textarea:focus, select:focus {
+      border-color: #3498db;
+      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+      outline: none;
+    }
+    .quiz-form-box, .question-block, .existing-quiz-item { /* Renamed .quiz-box to .quiz-form-box and .existing-quiz-item for clarity */
       background: #fff;
-      padding: 15px;
-      margin-bottom: 20px;
-      border-radius: 6px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 20px; /* Increased padding */
+      margin-bottom: 25px; /* Increased margin */
+      border-radius: 8px; /* More rounded */
+      box-shadow: 0 4px 8px rgba(0,0,0,0.08); /* Softer shadow */
     }
-    .option-input {
+    .question-block {
+        padding: 15px;
+    }
+    .option-input-group { /* Wrapper for option and its (potential) remove button */
       display: flex;
       gap: 10px;
-      margin-bottom: 5px;
+      align-items: center;
+      margin-bottom: 8px;
     }
-    .option-input input {
+    .option-input-group input {
       flex: 1;
+      margin: 0; /* Remove margin from input inside group */
     }
-    .remove-btn {
+    .remove-btn, .action-btn { /* Generic action button */
       background-color: #e74c3c;
       color: #fff;
       border: none;
-      padding: 8px 12px;
-      border-radius: 4px;
+      padding: 10px 15px; /* Adjusted padding */
+      border-radius: 5px;
       cursor: pointer;
-      margin-top: 5px;
       font-size: 14px;
+      transition: background-color 0.2s ease;
     }
-    .add-btn {
+    .remove-btn:hover {
+      background-color: #c0392b;
+    }
+
+    .add-btn { /* For adding questions/saving quiz */
       background-color: #3498db;
       color: #fff;
       border: none;
-      padding: 12px;
-      margin-top: 10px;
-      border-radius: 4px;
+      padding: 12px 20px;
+      margin-top: 15px;
+      border-radius: 5px;
       font-size: 16px;
       cursor: pointer;
+      transition: background-color 0.2s ease;
     }
-    .delete-btn, .edit-btn {
-      background: #c0392b;
+    .add-btn:hover {
+      background-color: #2980b9;
+    }
+    .add-btn:disabled {
+      background-color: #bdc3c7;
+      cursor: not-allowed;
+    }
+
+    .form-actions { /* Container for save/cancel buttons */
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    .form-actions button {
+        flex-grow: 1;
+        margin-top: 0;
+    }
+
+
+    .delete-quiz-btn, .edit-quiz-btn {
+      background: #e74c3c; /* Consistent delete red */
       color: white;
       border: none;
       padding: 8px 14px;
@@ -66,33 +103,64 @@
       cursor: pointer;
       margin-right: 10px;
       font-size: 14px;
+      transition: background-color 0.2s ease;
     }
-    .edit-btn {
-      background-color: #2ecc71;
+    .edit-quiz-btn {
+      background-color: #2ecc71; /* Green for edit */
     }
+    .delete-quiz-btn:hover { background-color: #c0392b; }
+    .edit-quiz-btn:hover { background-color: #27ae60; }
+
     .accordion-header {
       cursor: pointer;
-      padding: 10px;
-      background: #eee;
-      border-radius: 4px;
+      padding: 12px 15px;
+      background: #e9ecef; /* Lighter header */
+      border-radius: 5px;
       font-weight: bold;
+      display: flex;
+      align-items: center;
+      transition: background-color 0.2s ease;
+    }
+    .accordion-header:hover {
+        background-color: #dee2e6;
+    }
+    .accordion-icon {
+        margin-right: 10px;
+        font-size: 1.1em;
+        transition: transform 0.3s ease;
+    }
+    .accordion-header.active .accordion-icon {
+        transform: rotate(90deg);
     }
     .question-content {
       display: none;
-      margin-top: 10px;
+      padding: 15px; /* Padding for content */
+      border: 1px solid #e9ecef;
+      border-top: none;
+      border-radius: 0 0 5px 5px;
     }
+    .empty-list-message {
+        text-align: center;
+        color: #777;
+        padding: 20px;
+        font-style: italic;
+    }
+
     @media (max-width: 600px) {
-      .option-input {
-        flex-direction: column;
-        gap: 5px;
+      .option-input-group {
+        /* flex-direction: column; /* Reconsider this, might make it too tall */
+        gap: 8px;
       }
-      .delete-btn, .edit-btn {
-        width: 48%;
+      .delete-quiz-btn, .edit-quiz-btn {
+        width: auto; /* Allow natural width */
         margin-top: 8px;
       }
-      .quiz-box button {
-        width: 100%;
-        margin-top: 5px;
+      .quiz-form-box button, .existing-quiz-item button { /* More specific targeting */
+        /* width: 100%; /* Re-evaluate if all buttons should be full width */
+        margin-top: 8px;
+      }
+       .form-actions {
+        flex-direction: column;
       }
     }
     .popup-overlay {
@@ -107,12 +175,18 @@
     }
     .popup-box {
       background: #fff;
-      padding: 40px;
-      border-radius: 12px;
+      padding: 30px 40px; /* Adjusted padding */
+      border-radius: 10px; /* More rounded */
       text-align: center;
-      max-width: 500px;
+      max-width: 450px; /* Slightly smaller */
+      width: 90%;
       animation: fadeInScale 0.3s ease-in-out;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      box-shadow: 0 5px 20px rgba(0,0,0,0.25);
+    }
+    .popup-box p {
+        font-size: 1.1em;
+        margin-bottom: 20px;
+        line-height: 1.6;
     }
     .popup-box button {
       background: #3498db;
@@ -121,31 +195,43 @@
       padding: 12px 24px;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 18px;
+      font-size: 17px; /* Slightly adjusted */
       margin-top: 10px;
+      transition: background-color 0.2s ease;
+    }
+    .popup-box button:hover {
+        background-color: #2980b9;
     }
     @keyframes fadeInScale {
-      0% { transform: scale(0.7); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
+      0% { transform: scale(0.8) translateY(20px); opacity: 0; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
     }
   </style>
 </head>
 <body>
-  <h2 id="form-title">Create New Quiz</h2>
-  <div class="quiz-box">
+  <div class="quiz-form-box"> <h2 id="form-title">Create New Quiz</h2>
     <input type="text" id="quiz-title" placeholder="Quiz Title" />
-    <textarea id="quiz-description" placeholder="Quiz Description"></textarea>
+    <textarea id="quiz-description" placeholder="Quiz Description" rows="3"></textarea>
     <div id="questions-container"></div>
     <button class="add-btn" onclick="addQuestion()">+ Add Question</button>
-    <button class="add-btn" onclick="submitQuiz()">Save Quiz</button>
+    <div class="form-actions">
+        <button id="submit-quiz-btn" class="add-btn" onclick="submitQuiz()">Save Quiz</button>
+        <button id="cancel-edit-btn" class="add-btn" style="display: none; background-color: #7f8c8d;" onclick="cancelEdit()">Cancel Edit</button>
+    </div>
   </div>
+
   <h2>Existing Quizzes</h2>
-  <div id="quiz-list"></div>  <div id="custom-popup" class="popup-overlay">
+  <div id="quiz-list">
+    </div>
+
+  <div id="custom-popup" class="popup-overlay">
     <div class="popup-box">
       <p id="popup-message">Popup Message</p>
       <button onclick="closePopup()">OK</button>
     </div>
-  </div>  <script type="module">
+  </div>
+
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
     import {
       getFirestore, collection, addDoc, deleteDoc,
@@ -153,7 +239,7 @@
     } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyDm788npk4qw9RcT7qevq2HPH5-DbSTq2k",
+      apiKey: "AIzaSyDm788npk4qw9RcT7qevq2HPH5-DbSTq2k", // Replace with your actual API key
       authDomain: "location-45133.firebaseapp.com",
       projectId: "location-45133",
       storageBucket: "location-45133.appspot.com",
@@ -168,36 +254,101 @@
     const titleInput = document.getElementById("quiz-title");
     const descInput = document.getElementById("quiz-description");
     const formTitle = document.getElementById("form-title");
+    const submitQuizBtn = document.getElementById("submit-quiz-btn");
+    const cancelEditBtn = document.getElementById("cancel-edit-btn");
+    const quizListDiv = document.getElementById("quiz-list");
 
     let editingQuizId = null;
-    let questionCount = 0;
+    let questionCounter = 0; // Used for unique ID generation if needed, and for display numbering
+
+    function updateAnswerDropdown(questionBlock) {
+        const optionInputs = questionBlock.querySelectorAll(".option");
+        const answerSelect = questionBlock.querySelector(".answer-select");
+        const previouslySelectedAnswer = answerSelect.value;
+        answerSelect.innerHTML = '<option value="">-- Select Correct Answer --</option>';
+
+        let anOptionMatchedPrevious = false;
+        optionInputs.forEach(optInput => {
+            const optText = optInput.value.trim();
+            if (optText) {
+                const optionElement = document.createElement("option");
+                optionElement.value = optText;
+                optionElement.textContent = optText;
+                answerSelect.appendChild(optionElement);
+                if (optText === previouslySelectedAnswer) {
+                    optionElement.selected = true;
+                    anOptionMatchedPrevious = true;
+                }
+            }
+        });
+        // If the previously selected answer is no longer a valid option, revert to placeholder
+        if (!anOptionMatchedPrevious && previouslySelectedAnswer !== "") {
+             answerSelect.value = ""; // Revert to placeholder
+        } else if (anOptionMatchedPrevious) {
+            answerSelect.value = previouslySelectedAnswer; // Re-set if it was valid
+        }
+    }
+
 
     window.addQuestion = function () {
-      questionCount++;
+      questionCounter++;
+      const questionNumber = questionsContainer.children.length + 1;
       const div = document.createElement("div");
       div.className = "question-block";
+      div.id = `question-${questionCounter}`; // Unique ID for the block
+
       const header = document.createElement("div");
       header.className = "accordion-header";
-      header.textContent = `Question ${questionCount}`;
+      header.innerHTML = `<span class="accordion-icon">►</span> Question ${questionNumber}`;
+
       const content = document.createElement("div");
       content.className = "question-content";
       content.innerHTML = `
         <input type="text" class="question-text" placeholder="Enter question">
-        <div class="option-input"><input type="text" placeholder="Option A" class="option"></div>
-        <div class="option-input"><input type="text" placeholder="Option B" class="option"></div>
-        <div class="option-input"><input type="text" placeholder="Option C" class="option"></div>
-        <div class="option-input"><input type="text" placeholder="Option D" class="option"></div>
-        <input type="text" class="answer" placeholder="Correct Answer (must match one option)">
-        <button class="remove-btn" onclick="this.closest('.question-block').remove()">Remove Question</button>
-      `;
+        <label>Options (Enter text for each):</label>
+        <div class="option-input-group"><input type="text" placeholder="Option A" class="option" oninput="updateAnswerDropdown(this.closest('.question-block'))"></div>
+        <div class="option-input-group"><input type="text" placeholder="Option B" class="option" oninput="updateAnswerDropdown(this.closest('.question-block'))"></div>
+        <div class="option-input-group"><input type="text" placeholder="Option C" class="option" oninput="updateAnswerDropdown(this.closest('.question-block'))"></div>
+        <div class="option-input-group"><input type="text" placeholder="Option D" class="option" oninput="updateAnswerDropdown(this.closest('.question-block'))"></div>
+        <label for="answer-select-${questionCounter}">Correct Answer:</label>
+        <select class="answer-select" id="answer-select-${questionCounter}">
+            <option value="">-- Select Correct Answer --</option>
+        </select>
+        <button class="remove-btn" onclick="removeQuestionBlock(this)">Remove Question</button>
+      `; // Added labels for clarity
+
       header.addEventListener("click", () => {
-        header.classList.toggle("active");
-        content.style.display = content.style.display === "block" ? "none" : "block";
+        const isActive = header.classList.toggle("active");
+        content.style.display = isActive ? "block" : "none";
+        header.querySelector('.accordion-icon').style.transform = isActive ? "rotate(90deg)" : "rotate(0deg)";
       });
+
       div.appendChild(header);
       div.appendChild(content);
       questionsContainer.appendChild(div);
+
+      // Expand the new question by default
+      content.style.display = "block";
+      header.classList.add("active");
+      header.querySelector('.accordion-icon').style.transform = "rotate(90deg)";
+      updateAnswerDropdown(div); // Initial population for the new question's dropdown
     };
+
+    window.removeQuestionBlock = function(buttonEl) {
+        buttonEl.closest('.question-block').remove();
+        // Re-number accordion headers
+        const questionBlocks = questionsContainer.querySelectorAll('.question-block');
+        questionBlocks.forEach((block, index) => {
+            block.querySelector('.accordion-header').innerHTML = `<span class="accordion-icon">${block.querySelector('.accordion-icon').style.transform === 'rotate(90deg)' ? '▼' : '►'}</span> Question ${index + 1}`;
+             // Re-attach icon transform based on active state
+            if (block.querySelector('.accordion-header').classList.contains('active')) {
+                 block.querySelector('.accordion-icon').style.transform = "rotate(90deg)";
+            } else {
+                 block.querySelector('.accordion-icon').style.transform = "rotate(0deg)";
+            }
+        });
+    }
+
 
     function clearForm() {
       titleInput.value = "";
@@ -205,28 +356,63 @@
       questionsContainer.innerHTML = "";
       editingQuizId = null;
       formTitle.textContent = "Create New Quiz";
-      questionCount = 0;
+      submitQuizBtn.textContent = "Save Quiz";
+      cancelEditBtn.style.display = "none";
+      questionCounter = 0; // Reset counter
+    }
+
+    window.cancelEdit = function() {
+        clearForm();
     }
 
     window.submitQuiz = async function () {
       const title = titleInput.value.trim();
       const description = descInput.value.trim();
       const questionBlocks = document.querySelectorAll(".question-block");
-      if (!title || !description || questionBlocks.length === 0) {
-        showPopup("Please fill in all fields and add at least one question.");
+
+      if (!title) {
+        showPopup("Please enter a quiz title.");
         return;
       }
+      if (!description) {
+        showPopup("Please enter a quiz description.");
+        return;
+      }
+      if (questionBlocks.length === 0) {
+        showPopup("Please add at least one question.");
+        return;
+      }
+
       const questions = [];
-      questionBlocks.forEach(block => {
-        const q = block.querySelector(".question-text").value.trim();
+      for (const block of questionBlocks) { // Use for...of for potential async in future
+        const qText = block.querySelector(".question-text").value.trim();
         const opts = Array.from(block.querySelectorAll(".option")).map(o => o.value.trim());
-        const ans = block.querySelector(".answer").value.trim();
-        if (!q || opts.some(o => !o) || !ans || !opts.includes(ans)) {
-          showPopup("Each question must be complete. Answer must match one of the options.");
-          throw new Error("Invalid question data");
+        const ans = block.querySelector(".answer-select").value; // Read from select
+
+        if (!qText) {
+          showPopup(`Question text is missing in one of the questions (Question ${Array.from(questionBlocks).indexOf(block) + 1}).`);
+          return;
         }
-        questions.push({ question: q, options: opts, answer: ans });
-      });
+        if (opts.some(o => !o)) {
+          showPopup(`One or more options are missing in Question ${Array.from(questionBlocks).indexOf(block) + 1}. All 4 options are required.`);
+          return;
+        }
+        if (opts.length !== 4) { // Ensure exactly 4 options provided
+            showPopup(`Question ${Array.from(questionBlocks).indexOf(block) + 1} must have exactly 4 options filled.`);
+            return;
+        }
+        if (!ans) {
+          showPopup(`Correct answer not selected for Question ${Array.from(questionBlocks).indexOf(block) + 1}.`);
+          return;
+        }
+        // The selected answer 'ans' should inherently be one of the 'opts' if dropdown is working correctly
+        questions.push({ question: qText, options: opts, answer: ans });
+      }
+
+      const originalButtonText = submitQuizBtn.textContent;
+      submitQuizBtn.disabled = true;
+      submitQuizBtn.textContent = editingQuizId ? 'Updating...' : 'Saving...';
+
       try {
         if (editingQuizId) {
           await updateDoc(doc(db, "quizzes", editingQuizId), { title, description, questions });
@@ -238,69 +424,144 @@
         clearForm();
         loadQuizzes();
       } catch (e) {
+        console.error("Error saving quiz:", e);
         showPopup("Error saving quiz: " + e.message);
+      } finally {
+        submitQuizBtn.disabled = false;
+        submitQuizBtn.textContent = editingQuizId ? "Update Quiz" : "Save Quiz"; // Reset based on mode after op
+         if (editingQuizId) { // If still in edit mode (e.g. error saving), ensure cancel is visible
+            // No, clearForm() handles this. So if successful, it goes to create mode.
+            // If error, it should revert to what it was.
+            // The text content should be set based on formTitle to be safe.
+            if (formTitle.textContent === "Edit Quiz") {
+                submitQuizBtn.textContent = "Update Quiz";
+            } else {
+                submitQuizBtn.textContent = "Save Quiz";
+            }
+        }
+
       }
     };
 
     async function loadQuizzes() {
-      const quizList = document.getElementById("quiz-list");
-      quizList.innerHTML = "";
-      const querySnapshot = await getDocs(collection(db, "quizzes"));
-      querySnapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        const quizDiv = document.createElement("div");
-        quizDiv.className = "quiz-box";
-        quizDiv.innerHTML = `
-          <h3>${data.title}</h3>
-          <p>${data.description}</p>
-          <p><strong>${data.questions.length}</strong> question(s)</p>
-          <button class="edit-btn" onclick="editQuiz('${docSnap.id}')">Edit</button>
-          <button class="delete-btn" onclick="deleteQuiz('${docSnap.id}')">Delete</button>
-        `;
-        quizList.appendChild(quizDiv);
-      });
+      quizListDiv.innerHTML = ""; // Clear previous list
+      try {
+        const querySnapshot = await getDocs(collection(db, "quizzes"));
+        if (querySnapshot.empty) {
+            quizListDiv.innerHTML = '<p class="empty-list-message">No quizzes found. Start by creating a new one!</p>';
+            return;
+        }
+        querySnapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          const quizDiv = document.createElement("div");
+          quizDiv.className = "existing-quiz-item"; // Updated class
+          quizDiv.innerHTML = `
+            <h3>${data.title}</h3>
+            <p>${data.description.substring(0,100)}${data.description.length > 100 ? '...' : ''}</p> <p><strong>${data.questions ? data.questions.length : 0}</strong> question(s)</p>
+            <div>
+                <button class="edit-quiz-btn" onclick="editQuiz('${docSnap.id}')">Edit</button>
+                <button class="delete-quiz-btn" onclick="deleteQuiz('${docSnap.id}')">Delete</button>
+            </div>
+          `;
+          quizListDiv.appendChild(quizDiv);
+        });
+      } catch (error) {
+          console.error("Error loading quizzes:", error);
+          quizListDiv.innerHTML = '<p class="empty-list-message" style="color: red;">Could not load quizzes. Please try again later.</p>';
+      }
     }
 
     window.deleteQuiz = async function (id) {
-      if (confirm("Are you sure you want to delete this quiz?")) {
-        await deleteDoc(doc(db, "quizzes", id));
-        showPopup("Quiz deleted.");
-        loadQuizzes();
+      if (confirm("Are you sure you want to delete this quiz? This action cannot be undone.")) {
+        try {
+            await deleteDoc(doc(db, "quizzes", id));
+            showPopup("Quiz deleted successfully.");
+            loadQuizzes();
+            if (editingQuizId === id) { // If deleting the quiz currently being edited
+                clearForm();
+            }
+        } catch (error) {
+            console.error("Error deleting quiz:", error);
+            showPopup("Error deleting quiz: " + error.message);
+        }
       }
     };
 
     window.editQuiz = async function (id) {
-      editingQuizId = id;
-      formTitle.textContent = "Edit Quiz";
-      const quizDoc = await getDoc(doc(db, "quizzes", id));
-      const data = quizDoc.data();
-      titleInput.value = data.title;
-      descInput.value = data.description;
-      questionsContainer.innerHTML = "";
-      questionCount = 0;
-      data.questions.forEach(q => {
-        questionCount++;
-        const div = document.createElement("div");
-        div.className = "question-block";
-        const header = document.createElement("div");
-        header.className = "accordion-header";
-        header.textContent = `Question ${questionCount}`;
-        const content = document.createElement("div");
-        content.className = "question-content";
-        content.innerHTML = `
-          <input type="text" class="question-text" value="${q.question}">
-          ${q.options.map(opt => `<div class="option-input"><input type="text" class="option" value="${opt}"></div>`).join("")}
-          <input type="text" class="answer" value="${q.answer}">
-          <button class="remove-btn" onclick="this.closest('.question-block').remove()">Remove Question</button>
-        `;
-        header.addEventListener("click", () => {
-          header.classList.toggle("active");
-          content.style.display = content.style.display === "block" ? "none" : "block";
-        });
-        div.appendChild(header);
-        div.appendChild(content);
-        questionsContainer.appendChild(div);
-      });
+      // Scroll to top to see the form
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      try {
+        const quizDocRef = doc(db, "quizzes", id);
+        const quizDoc = await getDoc(quizDocRef);
+        if (!quizDoc.exists()) {
+            showPopup("Quiz not found. It may have been deleted.");
+            loadQuizzes(); // Refresh list
+            return;
+        }
+
+        editingQuizId = id;
+        formTitle.textContent = "Edit Quiz";
+        submitQuizBtn.textContent = "Update Quiz";
+        cancelEditBtn.style.display = "inline-block";
+
+        const data = quizDoc.data();
+        titleInput.value = data.title;
+        descInput.value = data.description;
+        questionsContainer.innerHTML = ""; // Clear previous questions
+        questionCounter = 0; // Reset for this quiz's questions
+
+        if (data.questions && Array.isArray(data.questions)) {
+            data.questions.forEach((q, index) => {
+              questionCounter++; // For unique IDs of elements like select
+              const currentQuestionNumberInUI = index + 1;
+              const div = document.createElement("div");
+              div.className = "question-block";
+              div.id = `question-edit-${questionCounter}`;
+
+              const header = document.createElement("div");
+              header.className = "accordion-header";
+              // Set icon to collapsed initially for loaded questions
+              header.innerHTML = `<span class="accordion-icon" style="transform: rotate(0deg);">►</span> Question ${currentQuestionNumberInUI}`;
+
+
+              const content = document.createElement("div");
+              content.className = "question-content";
+              // Ensure options are always an array of 4 for the form
+              const formOptions = q.options && q.options.length === 4 ? q.options : ["", "", "", ""];
+
+              content.innerHTML = `
+                <input type="text" class="question-text" value="${q.question || ''}">
+                <label>Options:</label>
+                ${formOptions.map(opt => `<div class="option-input-group"><input type="text" class="option" value="${opt}" oninput="updateAnswerDropdown(this.closest('.question-block'))"></div>`).join("")}
+                <label for="answer-select-edit-${questionCounter}">Correct Answer:</label>
+                <select class="answer-select" id="answer-select-edit-${questionCounter}"></select>
+                <button class="remove-btn" onclick="removeQuestionBlock(this)">Remove Question</button>
+              `;
+
+              header.addEventListener("click", () => {
+                const isActive = header.classList.toggle("active");
+                content.style.display = isActive ? "block" : "none";
+                header.querySelector('.accordion-icon').style.transform = isActive ? "rotate(90deg)" : "rotate(0deg)";
+              });
+
+              div.appendChild(header);
+              div.appendChild(content);
+              questionsContainer.appendChild(div);
+
+              updateAnswerDropdown(div); // Populate dropdown based on option values
+              const answerSelect = div.querySelector(".answer-select");
+              answerSelect.value = q.answer || ""; // Set the correct answer
+              if (!answerSelect.value && q.answer) { // If q.answer wasn't found in options, log it
+                  console.warn(`Answer "${q.answer}" for question "${q.question}" not found in its options. It might be an old record or a typo.`);
+              }
+
+            });
+        }
+      } catch (error) {
+          console.error("Error loading quiz for editing:", error);
+          showPopup("Could not load quiz data for editing: " + error.message);
+          clearForm(); // Revert to create mode if editing fails
+      }
     };
 
     window.showPopup = function(message) {
@@ -312,6 +573,8 @@
       document.getElementById("custom-popup").style.display = "none";
     };
 
+    // Initial load of quizzes
     loadQuizzes();
-  </script></body>
+  </script>
+</body>
 </html>
